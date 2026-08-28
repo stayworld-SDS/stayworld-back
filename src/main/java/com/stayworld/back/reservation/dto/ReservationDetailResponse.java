@@ -1,7 +1,7 @@
 package com.stayworld.back.reservation.dto;
 
-import com.stayworld.back.guesthouse.entity.Guesthouse;
 import com.stayworld.back.reservation.entity.Reservation;
+import com.stayworld.back.reservation.support.GuesthouseInfo;
 
 import java.time.LocalDate;
 
@@ -19,20 +19,19 @@ public record ReservationDetailResponse(
         boolean wifi,
         boolean breakfast
 ) {
-    public static ReservationDetailResponse from(Reservation r) {
-        Guesthouse g = r.getGuesthouse();
+    public static ReservationDetailResponse from(Reservation r, GuesthouseInfo g) {
         return new ReservationDetailResponse(
-                g.getId(),
-                g.getName(),
+                g.id(),
+                g.name(),
                 r.getStartDate(),
                 r.getEndDate(),
                 r.getHeadcount(),
                 r.getCost(),
-                g.getAddress(),
-                g.getCapacity(),
-                g.isParking(),
-                g.isWifi(),
-                g.isBreakfast()
+                g.address(),
+                g.capacity(),
+                g.parking(),
+                g.wifi(),
+                g.breakfast()
         );
     }
 }

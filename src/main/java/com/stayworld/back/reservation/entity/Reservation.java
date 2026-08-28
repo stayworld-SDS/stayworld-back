@@ -1,14 +1,10 @@
 package com.stayworld.back.reservation.entity;
 
-import com.stayworld.back.guesthouse.entity.Guesthouse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -29,13 +25,13 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** members 도메인 미완성이라 연관관계 대신 스칼라 FK 로 둔다. 응답에 회원 정보는 필요 없음. */
+    /** members 도메인 미완성 + 응답에 회원 정보 불필요 → 스칼라 FK. */
     @Column(nullable = false)
     private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "guesthouse_id", nullable = false)
-    private Guesthouse guesthouse;
+    /** guesthouse 도메인을 건드리지 않으려고 연관관계 대신 스칼라 FK. 숙소 정보는 GuesthouseReader 로 조회. */
+    @Column(name = "guesthouse_id", nullable = false)
+    private Long guesthouseId;
 
     @Column(nullable = false)
     private LocalDate startDate;   // 체크인
@@ -53,10 +49,10 @@ public class Reservation {
     private LocalDateTime createdAt;
 
     @Builder
-    private Reservation(Long userId, Guesthouse guesthouse, LocalDate startDate,
+    private Reservation(Long userId, Long guesthouseId, LocalDate startDate,
                         LocalDate endDate, int headcount, int cost) {
         this.userId = userId;
-        this.guesthouse = guesthouse;
+        this.guesthouseId = guesthouseId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.headcount = headcount;
