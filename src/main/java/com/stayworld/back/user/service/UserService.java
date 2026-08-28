@@ -2,7 +2,7 @@ package com.stayworld.back.user.service;
 
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.user.dto.DeleteDto;
-import com.stayworld.back.user.dto.LoginDto;
+import com.stayworld.back.auth.dto.LoginDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.entity.User;
@@ -62,18 +62,6 @@ public class UserService {
             throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
         }
         userRepository.delete(user);
-    }
-
-    @Transactional(readOnly = true)
-    public long login(LoginDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다."));
-
-        if (!user.getPassword().equals(dto.getPassword())) {
-            throw new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다.");
-        }
-
-        return user.getId();
     }
 
     private User findMemberById(long id) {
