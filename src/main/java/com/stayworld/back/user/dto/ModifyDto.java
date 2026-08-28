@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class ModifyDto {
-    String name;
+    String nickname;
     String phoneNumber;
 }

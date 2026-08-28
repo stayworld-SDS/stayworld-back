@@ -2,15 +2,16 @@ package com.stayworld.back.user.dto;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class UserDto {
-    int id;
+    long id;
     String password;
     String email;
+    String nickname;
     String phoneNumber;
     int balance;
-    Date createdAt;
+    LocalDateTime createdAt;
     int visitorCount;
 }
