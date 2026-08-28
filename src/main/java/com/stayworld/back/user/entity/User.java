@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Component
-@Table(name = "members")
+@Table(name = "users")
 @Getter
 @Setter
-public class Member {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
