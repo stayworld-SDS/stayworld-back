@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GuestbookDTO {
-    public int id;
-    public int userId;
-    public int guesthouseId;
+    public long userId;
     public String body;
 }
