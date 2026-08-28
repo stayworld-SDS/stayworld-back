@@ -5,7 +5,7 @@ import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.LoginDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
-import com.stayworld.back.user.entity.User;
+import com.stayworld.back.user.entity.Member;
 import com.stayworld.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,16 +25,16 @@ public class UserService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
-        User user = new User();
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
-        user.setNickname(dto.getNickname());
-        user.setPhoneNumber(dto.getPhoneNumber());
-        user.setBalance(0);
-        user.setVisitorCount(0);
-        user.setCreated_at(LocalDateTime.now());
+        Member member = new Member();
+        member.setEmail(dto.getEmail());
+        member.setPassword(dto.getPassword());
+        member.setNickname(dto.getNickname());
+        member.setPhoneNumber(dto.getPhoneNumber());
+        member.setBalance(0);
+        member.setVisitorCount(0);
+        member.setCreated_at(LocalDateTime.now());
 
-        return toDto(userRepository.save(user));
+        return toDto(userRepository.save(member));
     }
 
     @Transactional(readOnly = true)
@@ -49,47 +49,47 @@ public class UserService {
 
     @Transactional
     public UserDto modifyUserDetails(long id, ModifyDto dto) {
-        User user = findMemberById(id);
-        user.setNickname(dto.getNickname());
-        user.setPhoneNumber(dto.getPhoneNumber());
-        return toDto(user);
+        Member member = findMemberById(id);
+        member.setNickname(dto.getNickname());
+        member.setPhoneNumber(dto.getPhoneNumber());
+        return toDto(member);
     }
 
     @Transactional
     public void deleteUser(long id, DeleteDto dto) {
-        User user = findMemberById(id);
-        if (!user.getPassword().equals(dto.getPassword())) {
+        Member member = findMemberById(id);
+        if (!member.getPassword().equals(dto.getPassword())) {
             throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
         }
-        userRepository.delete(user);
+        userRepository.delete(member);
     }
 
     @Transactional(readOnly = true)
     public long login(LoginDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
+        Member member = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다."));
 
-        if (!user.getPassword().equals(dto.getPassword())) {
+        if (!member.getPassword().equals(dto.getPassword())) {
             throw new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
 
-        return user.getId();
+        return member.getId();
     }
 
-    private User findMemberById(long id) {
+    private Member findMemberById(long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
-    private UserDto toDto(User user) {
+    private UserDto toDto(Member member) {
         UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setNickname(user.getNickname());
-        dto.setPhoneNumber(user.getPhoneNumber());
-        dto.setBalance(user.getBalance());
-        dto.setCreatedAt(user.getCreated_at());
-        dto.setVisitorCount(user.getVisitorCount());
+        dto.setId(member.getId());
+        dto.setEmail(member.getEmail());
+        dto.setNickname(member.getNickname());
+        dto.setPhoneNumber(member.getPhoneNumber());
+        dto.setBalance(member.getBalance());
+        dto.setCreatedAt(member.getCreated_at());
+        dto.setVisitorCount(member.getVisitorCount());
         return dto;
     }
 }
