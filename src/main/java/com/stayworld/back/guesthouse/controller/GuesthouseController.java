@@ -1,13 +1,17 @@
 package com.stayworld.back.guesthouse.controller;
 
 import com.stayworld.back.global.response.ApiResponse;
-import com.stayworld.back.guesthouse.dto.GuestbookDTO;
-import com.stayworld.back.guesthouse.dto.GuesthouseDTO;
+import com.stayworld.back.guesthouse.dto.GuestbookDto;
+import com.stayworld.back.guesthouse.dto.GuesthouseDto;
+import com.stayworld.back.guesthouse.service.GuestbookService;
+import com.stayworld.back.guesthouse.service.GuesthouseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/guesthouses")
 public class GuesthouseController {
