@@ -26,8 +26,8 @@ public class User {
     String phoneNumber;
     @Column(nullable = false)
     int balance;
-    @Column(nullable = false)
-    LocalDateTime created_at;
+    @Column(name="created_at", nullable = false)
+    LocalDateTime createdAt;
     @Column(name="visitor_count", nullable = false)
     int visitorCount;
 }

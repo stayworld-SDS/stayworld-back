@@ -3,20 +3,21 @@ package com.stayworld.back.user.controller;
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
 import com.stayworld.back.user.dto.DeleteDto;
-import com.stayworld.back.user.dto.LoginDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final String SESSION_MEMBER_ID = "MEMBER_ID";
+    public static final String SESSION_MEMBER_ID = "MEMBER_ID";
 
+    @Autowired
     private final UserService userService;
 
     @PostMapping("/users")
@@ -51,18 +52,6 @@ public class UserController {
         return ApiResponse.success("회원 탈퇴가 완료되었습니다.", null);
     }
 
-    @PostMapping("/auth/login")
-    public ApiResponse<Void> login(@RequestBody LoginDto dto, HttpSession session) {
-        long memberId = userService.login(dto);
-        session.setAttribute(SESSION_MEMBER_ID, memberId);
-        return ApiResponse.success("로그인에 성공하였습니다.", null);
-    }
-
-    @PostMapping("/auth/logout")
-    public ApiResponse<Void> logout(HttpSession session) {
-        session.invalidate();
-        return ApiResponse.success("로그아웃에 성공하였습니다.", null);
-    }
 
     private long getLoginMemberId(HttpSession session) {
         Object memberId = session.getAttribute(SESSION_MEMBER_ID);

@@ -1,4 +1,4 @@
-package com.stayworld.back.user.dto;
+package com.stayworld.back.auth.dto;
 
 import lombok.Data;
 

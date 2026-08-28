@@ -2,7 +2,7 @@ package com.stayworld.back.user.service;
 
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.user.dto.DeleteDto;
-import com.stayworld.back.user.dto.LoginDto;
+import com.stayworld.back.auth.dto.LoginDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.entity.User;
@@ -30,9 +30,9 @@ public class UserService {
         user.setPassword(dto.getPassword());
         user.setNickname(dto.getNickname());
         user.setPhoneNumber(dto.getPhoneNumber());
-        user.setBalance(0);
+        user.setBalance(50000);
         user.setVisitorCount(0);
-        user.setCreated_at(LocalDateTime.now());
+        user.setCreatedAt(LocalDateTime.now());
 
         return toDto(userRepository.save(user));
     }
@@ -64,18 +64,6 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    @Transactional(readOnly = true)
-    public long login(LoginDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다."));
-
-        if (!user.getPassword().equals(dto.getPassword())) {
-            throw new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다.");
-        }
-
-        return user.getId();
-    }
-
     private User findMemberById(long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
@@ -88,7 +76,7 @@ public class UserService {
         dto.setNickname(user.getNickname());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setBalance(user.getBalance());
-        dto.setCreatedAt(user.getCreated_at());
+        dto.setCreatedAt(user.getCreatedAt());
         dto.setVisitorCount(user.getVisitorCount());
         return dto;
     }
