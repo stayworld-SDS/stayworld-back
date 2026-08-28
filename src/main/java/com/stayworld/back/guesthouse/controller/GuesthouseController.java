@@ -12,6 +12,9 @@ import java.util.List;
 @RequestMapping("/guesthouses")
 public class GuesthouseController {
 
+    private final GuestbookService guestbookService;
+    private final GuesthouseService guesthouseService;
+
     @GetMapping
     public ApiResponse<List<GuesthouseDTO>> searchGuesthouses(
             @RequestParam String location,
@@ -38,9 +41,10 @@ public class GuesthouseController {
 
     @PostMapping("/{id}/guestbooks")
     public ApiResponse<Void> postGuestbook(
-            @PathVariable("id") int guesthouseId,
-            @RequestBody GuestbookDTO guestbook
+            @PathVariable("id") long guesthouseId,
+            @RequestBody GuestbookDto guestbook
     ){
+        guestbookService.saveGuestbook(guesthouseId, guestbook);
         return ApiResponse.success(null);
     }
 
