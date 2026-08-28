@@ -9,6 +9,7 @@ import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +18,7 @@ public class UserController {
 
     private static final String SESSION_MEMBER_ID = "MEMBER_ID";
 
+    @Autowired
     private final UserService userService;
 
     @PostMapping("/users")

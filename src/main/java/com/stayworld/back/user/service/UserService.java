@@ -30,9 +30,9 @@ public class UserService {
         user.setPassword(dto.getPassword());
         user.setNickname(dto.getNickname());
         user.setPhoneNumber(dto.getPhoneNumber());
-        user.setBalance(0);
+        user.setBalance(50000);
         user.setVisitorCount(0);
-        user.setCreated_at(LocalDateTime.now());
+        user.setCreatedAt(LocalDateTime.now());
 
         return toDto(userRepository.save(user));
     }
@@ -88,7 +88,7 @@ public class UserService {
         dto.setNickname(user.getNickname());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setBalance(user.getBalance());
-        dto.setCreatedAt(user.getCreated_at());
+        dto.setCreatedAt(user.getCreatedAt());
         dto.setVisitorCount(user.getVisitorCount());
         return dto;
     }
