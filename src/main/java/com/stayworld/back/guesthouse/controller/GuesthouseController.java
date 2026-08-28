@@ -20,7 +20,7 @@ public class GuesthouseController {
     private final GuesthouseService guesthouseService;
 
     @GetMapping
-    public ApiResponse<List<GuesthouseDTO>> searchGuesthouses(
+    public ApiResponse<List<GuesthouseDto>> searchGuesthouses(
             @RequestParam String location,
             @RequestParam("start") LocalDate startDate,
             @RequestParam("end") LocalDate endDate,
@@ -30,14 +30,14 @@ public class GuesthouseController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<GuesthouseDTO> getGuesthouse(
+    public ApiResponse<GuesthouseDto> getGuesthouse(
             @PathVariable("id") int id
     ){
-        return ApiResponse.success(new GuesthouseDTO());
+        return ApiResponse.success(new GuesthouseDto());
     }
 
     @GetMapping("/{id}/guestbooks")
-    public ApiResponse<List<GuestbookDTO>> getGuestbook(
+    public ApiResponse<List<GuestbookDto>> getGuestbook(
             @PathVariable("id") int id
     ) {
         return ApiResponse.success(List.of());
