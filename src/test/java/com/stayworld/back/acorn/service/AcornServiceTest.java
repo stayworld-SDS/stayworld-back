@@ -1,17 +1,24 @@
 package com.stayworld.back.acorn.service;
 
+import com.stayworld.back.acorn.dto.AcornHistoryResponse;
 import com.stayworld.back.acorn.dto.GamePlayResponse;
+import com.stayworld.back.acorn.entity.AcornHistory;
 import com.stayworld.back.acorn.repository.AcornDailyPlayRepository;
 import com.stayworld.back.acorn.repository.AcornHistoryRepository;
 import com.stayworld.back.user.entity.User;
 import com.stayworld.back.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,5 +95,34 @@ class AcornServiceTest {
         assertThat(res.balance()).isEqualTo(120);
         assertThat(res.playCount()).isEqualTo(4);
         assertThat(res.dailyLimit()).isEqualTo(AcornService.DAILY_PLAY_LIMIT);
+    }
+
+    @Test
+    void history_요청한_pageable_그대로_레포지토리에_전달한다() {
+        AcornHistory h = AcornHistory.builder()
+                .userId(1L).amount(-100).balanceAfter(9_900).reason("GAME_ENTRY").build();
+        Pageable pageable = PageRequest.of(0, 20);
+        when(acornHistoryRepository.findByUserId(1L, pageable))
+                .thenReturn(new PageImpl<>(List.of(h), pageable, 1));
+
+        AcornHistoryResponse res = acornService.history(1L, pageable);
+
+        assertThat(res.history()).hasSize(1);
+        assertThat(res.totalElements()).isEqualTo(1);
+        verify(acornHistoryRepository).findByUserId(1L, pageable);
+    }
+
+    @Test
+    void history_size가_상한을_넘으면_상한으로_잘라서_조회한다() {
+        Pageable requested = PageRequest.of(2, 9_999);
+        when(acornHistoryRepository.findByUserId(eq(1L), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        acornService.history(1L, requested);
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(acornHistoryRepository).findByUserId(eq(1L), captor.capture());
+        assertThat(captor.getValue().getPageSize()).isEqualTo(100);   // MAX_HISTORY_PAGE_SIZE
+        assertThat(captor.getValue().getPageNumber()).isEqualTo(2);   // page 번호는 그대로
     }
 }

@@ -1,13 +1,20 @@
 package com.stayworld.back.acorn.dto;
 
 import com.stayworld.back.acorn.entity.AcornHistory;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 /** GET /acorns/history 응답. */
-public record AcornHistoryResponse(List<Item> history) {
-
+public record AcornHistoryResponse(
+        List<Item> history,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages,
+        boolean hasNext
+) {
     public record Item(
             String reason,
             int amount,
@@ -19,7 +26,14 @@ public record AcornHistoryResponse(List<Item> history) {
         }
     }
 
-    public static AcornHistoryResponse from(List<AcornHistory> histories) {
-        return new AcornHistoryResponse(histories.stream().map(Item::from).toList());
+    public static AcornHistoryResponse from(Page<AcornHistory> page) {
+        return new AcornHistoryResponse(
+                page.getContent().stream().map(Item::from).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext()
+        );
     }
 }
