@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,17 +13,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * 하루 1회 게임 참여 제한용 기록. {@code (user_id, play_date)} 유니크 제약이 있어
- * 동시 요청으로 두 번 insert 되면 두 번째가 무결성 위반으로 막힌다.
+ * 게임 참여 1회당 기록 하나. 하루 참여 횟수 제한(현재 {@link com.stayworld.back.acorn.service.AcornService}
+ * 에서 10회)은 {@code (user_id, play_date)} 로 이 테이블을 세어(count) 체크한다.
+ *
+ * <p>TODO(동시성): 체크 후 insert 라 동시 요청이 정확히 몰리면 하루 제한을 살짝 넘길 수 있다.
+ * (다른 동시성 이슈와 마찬가지로 이번 범위 밖 — {@code TODO.md} 참고)
  */
 @Entity
-@Table(
-        name = "acorn_daily_play",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uq_acorn_daily_play_user_date",
-                columnNames = {"user_id", "play_date"}
-        )
-)
+@Table(name = "acorn_daily_play")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AcornDailyPlay {

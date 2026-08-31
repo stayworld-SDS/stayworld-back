@@ -1,19 +1,18 @@
 package com.stayworld.back.acorn.repository;
 
 import com.stayworld.back.acorn.entity.AcornDailyPlay;
+import com.stayworld.back.acorn.service.AcornService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * {@link AcornDailyPlayRepository} 파생 쿼리 + {@code acorn_daily_play} 의
- * {@code (user_id, play_date)} 유니크 제약을 실제 DB(H2)로 검증한다.
+ * {@link AcornDailyPlayRepository} 파생 쿼리를 실제 DB(H2)로 검증한다.
+ * (하루 참여 제한이 10회로 늘어나며 unique 제약은 없어지고, count 기반 체크로 바뀌었다.)
  */
 @DataJpaTest
 class AcornDailyPlayRepositoryTest {
@@ -24,34 +23,35 @@ class AcornDailyPlayRepositoryTest {
     private static final LocalDate TODAY = LocalDate.now();
 
     @Test
-    void existsByUserIdAndPlayDate_해당_유저가_그날_참여했으면_true() {
+    void countByUserIdAndPlayDate_참여한_횟수만큼_반환한다() {
+        acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY));
+        acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY));
         acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY));
 
-        assertThat(acornDailyPlayRepository.existsByUserIdAndPlayDate(1L, TODAY)).isTrue();
+        assertThat(acornDailyPlayRepository.countByUserIdAndPlayDate(1L, TODAY)).isEqualTo(3);
     }
 
     @Test
-    void existsByUserIdAndPlayDate_다른_날짜나_다른_유저면_false() {
+    void countByUserIdAndPlayDate_참여기록이_없으면_0() {
+        assertThat(acornDailyPlayRepository.countByUserIdAndPlayDate(1L, TODAY)).isZero();
+    }
+
+    @Test
+    void countByUserIdAndPlayDate_다른_날짜나_다른_유저는_섞이지_않는다() {
         acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY));
+        acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY.plusDays(1)));
+        acornDailyPlayRepository.save(new AcornDailyPlay(2L, TODAY));
 
-        assertThat(acornDailyPlayRepository.existsByUserIdAndPlayDate(1L, TODAY.plusDays(1))).isFalse();
-        assertThat(acornDailyPlayRepository.existsByUserIdAndPlayDate(2L, TODAY)).isFalse();
+        assertThat(acornDailyPlayRepository.countByUserIdAndPlayDate(1L, TODAY)).isEqualTo(1);
     }
 
     @Test
-    void 같은_유저가_같은_날짜에_두번_저장하면_유니크_제약_위반() {
-        acornDailyPlayRepository.saveAndFlush(new AcornDailyPlay(1L, TODAY));
+    void 같은_유저가_같은_날짜에_여러번_참여해도_전부_기록된다() {
+        for (int i = 0; i < AcornService.DAILY_PLAY_LIMIT; i++) {
+            acornDailyPlayRepository.save(new AcornDailyPlay(1L, TODAY));
+        }
 
-        assertThatThrownBy(() -> acornDailyPlayRepository.saveAndFlush(new AcornDailyPlay(1L, TODAY)))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    void 같은_유저라도_날짜가_다르면_따로_저장된다() {
-        acornDailyPlayRepository.saveAndFlush(new AcornDailyPlay(1L, TODAY));
-        acornDailyPlayRepository.saveAndFlush(new AcornDailyPlay(1L, TODAY.plusDays(1)));
-
-        assertThat(acornDailyPlayRepository.existsByUserIdAndPlayDate(1L, TODAY)).isTrue();
-        assertThat(acornDailyPlayRepository.existsByUserIdAndPlayDate(1L, TODAY.plusDays(1))).isTrue();
+        assertThat(acornDailyPlayRepository.countByUserIdAndPlayDate(1L, TODAY))
+                .isEqualTo(AcornService.DAILY_PLAY_LIMIT);
     }
 }
