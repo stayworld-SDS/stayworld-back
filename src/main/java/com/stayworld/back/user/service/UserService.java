@@ -8,6 +8,7 @@ import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.entity.User;
 import com.stayworld.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
     @Transactional
@@ -25,9 +26,11 @@ public class UserService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+
         User user = new User();
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
+        user.setPassword(encodedPassword);
         user.setNickname(dto.getNickname());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setBalance(50000);
@@ -58,7 +61,7 @@ public class UserService {
     @Transactional
     public void deleteUser(long id, DeleteDto dto) {
         User user = findMemberById(id);
-        if (!user.getPassword().equals(dto.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
         }
         userRepository.delete(user);
