@@ -1,7 +1,7 @@
 package com.stayworld.back.guesthouse.service;
 
 import com.stayworld.back.global.exception.NotFoundException;
-import com.stayworld.back.guesthouse.dto.GuestbookDto;
+import com.stayworld.back.guesthouse.dto.GuestbookDTO;
 import com.stayworld.back.guesthouse.entity.Guestbook;
 import com.stayworld.back.guesthouse.entity.Guesthouse;
 import com.stayworld.back.guesthouse.repository.GuestbookRepository;
@@ -21,7 +21,7 @@ public class GuestbookService {
     private final GuesthouseRepository guesthouseRepository;
     private final UserRepository userRepository;
 
-    public void saveGuestbook(long guesthouseId, GuestbookDto guestbookDto){
+    public void saveGuestbook(long guesthouseId, GuestbookDTO guestbookDto){
         // TODO: 실제로 숙박한 적이 있는지 확인하는 로직 추가 (reservation 도메인 연계)
         // TODO: custom exception(숙박내역없음)
         User user = userRepository.findById(guestbookDto.getUserId())

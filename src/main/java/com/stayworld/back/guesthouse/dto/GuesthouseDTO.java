@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GuesthouseDto {
+public class GuesthouseDTO {
     public int id;
     public String name;
     public int price;

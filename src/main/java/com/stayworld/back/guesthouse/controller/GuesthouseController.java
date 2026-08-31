@@ -1,8 +1,8 @@
 package com.stayworld.back.guesthouse.controller;
 
 import com.stayworld.back.global.response.ApiResponse;
-import com.stayworld.back.guesthouse.dto.GuestbookDto;
-import com.stayworld.back.guesthouse.dto.GuesthouseDto;
+import com.stayworld.back.guesthouse.dto.GuestbookDTO;
+import com.stayworld.back.guesthouse.dto.GuesthouseDTO;
 import com.stayworld.back.guesthouse.service.GuestbookService;
 import com.stayworld.back.guesthouse.service.GuesthouseService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class GuesthouseController {
     private final GuesthouseService guesthouseService;
 
     @GetMapping
-    public ApiResponse<List<GuesthouseDto>> searchGuesthouses(
+    public ApiResponse<List<GuesthouseDTO>> searchGuesthouses(
             @RequestParam String location,
             @RequestParam("start") LocalDate startDate,
             @RequestParam("end") LocalDate endDate,
@@ -30,14 +30,14 @@ public class GuesthouseController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<GuesthouseDto> getGuesthouse(
+    public ApiResponse<GuesthouseDTO> getGuesthouse(
             @PathVariable("id") int id
     ){
-        return ApiResponse.success(new GuesthouseDto());
+        return ApiResponse.success(new GuesthouseDTO());
     }
 
     @GetMapping("/{id}/guestbooks")
-    public ApiResponse<List<GuestbookDto>> getGuestbook(
+    public ApiResponse<List<GuestbookDTO>> getGuestbook(
             @PathVariable("id") int id
     ) {
         return ApiResponse.success(List.of());
@@ -46,7 +46,7 @@ public class GuesthouseController {
     @PostMapping("/{id}/guestbooks")
     public ApiResponse<Void> postGuestbook(
             @PathVariable("id") long guesthouseId,
-            @RequestBody GuestbookDto guestbook
+            @RequestBody GuestbookDTO guestbook
     ){
         guestbookService.saveGuestbook(guesthouseId, guestbook);
         return ApiResponse.success(null);

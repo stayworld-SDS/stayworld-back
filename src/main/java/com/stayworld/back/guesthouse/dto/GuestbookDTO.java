@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GuestbookDto {
+public class GuestbookDTO {
     public long userId;
     public String body;
 }
