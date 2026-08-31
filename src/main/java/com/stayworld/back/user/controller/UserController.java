@@ -2,6 +2,7 @@ package com.stayworld.back.user.controller;
 
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
+import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
@@ -21,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/users")
-    public ApiResponse<UserDto> createUser(@RequestBody UserDto dto) {
+    public ApiResponse<UserDto> createUser(@RequestBody CreateDto dto) {
         return ApiResponse.success("유저 생성에 성공하였습니다.", userService.createUser(dto));
     }
 
@@ -35,7 +36,7 @@ public class UserController {
         return ApiResponse.success(userService.getUserById(getLoginMemberId(session)));
     }
 
-    @PostMapping("/users/check-email/{email}")
+    @GetMapping("/users/check-email/{email}")
     public ApiResponse<Boolean> checkEmailOccupancy(@PathVariable("email") String email) {
         return ApiResponse.success(userService.checkEmailOccupancy(email));
     }

@@ -14,7 +14,7 @@ import static com.stayworld.back.user.controller.UserController.SESSION_MEMBER_I
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-    AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/auth/login")
     public ApiResponse<Void> login(@RequestBody LoginDto dto, HttpSession session) {
