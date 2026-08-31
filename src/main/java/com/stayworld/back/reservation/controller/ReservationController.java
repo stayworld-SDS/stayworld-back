@@ -27,11 +27,18 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    // 유저 예약목록 조회
+    // 유저 예약목록 조회 (체크아웃 전 = 예정된 예약)
     @GetMapping("/me")
     public ApiResponse<List<ReservationSummaryResponse>> getMyReservations(
             @LoginMember Long userId) {
         return ApiResponse.success(reservationService.getMyReservations(userId));
+    }
+
+    // 유저가 다녀온 예약 목록 (체크아웃 지난 것, 최근 순)
+    @GetMapping("/history")
+    public ApiResponse<List<ReservationSummaryResponse>> getReservationHistory(
+            @LoginMember Long userId) {
+        return ApiResponse.success(reservationService.getReservationHistory(userId));
     }
 
     // 예약 상세 조회

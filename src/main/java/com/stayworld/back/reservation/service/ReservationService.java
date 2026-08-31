@@ -31,11 +31,19 @@ public class ReservationService {
     private final GuesthouseReader guesthouseReader;
     private final AcornLedger acornLedger;
 
-    /** 유저의 유효한 예약 목록 (체크아웃이 오늘 이후인 건). */
+    /** 유저의 유효한 예약 목록 (체크아웃이 오늘 이후인 건, 체크인 빠른 순). */
     public List<ReservationSummaryResponse> getMyReservations(Long userId) {
-        List<Reservation> reservations = reservationRepository
-                .findByUserIdAndEndDateGreaterThanEqualOrderByStartDateAsc(userId, LocalDate.now());
+        return toSummaries(reservationRepository
+                .findByUserIdAndEndDateGreaterThanEqualOrderByStartDateAsc(userId, LocalDate.now()));
+    }
 
+    /** 유저가 다녀온 예약 목록 (체크아웃이 오늘 이전인 건, 최근 순). 취소한 예약은 하드 삭제라 여기 안 나온다. */
+    public List<ReservationSummaryResponse> getReservationHistory(Long userId) {
+        return toSummaries(reservationRepository
+                .findByUserIdAndEndDateLessThanOrderByStartDateDesc(userId, LocalDate.now()));
+    }
+
+    private List<ReservationSummaryResponse> toSummaries(List<Reservation> reservations) {
         Map<Long, GuesthouseInfo> guesthouses = guesthouseReader.readAll(
                 reservations.stream().map(Reservation::getGuesthouseId).collect(Collectors.toSet()));
 
