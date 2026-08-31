@@ -1,5 +1,6 @@
 package com.stayworld.back.reservation.service;
 
+import com.stayworld.back.acorn.service.AcornLedger;
 import com.stayworld.back.global.exception.NotFoundException;
 import com.stayworld.back.reservation.dto.ReservationCreateRequest;
 import com.stayworld.back.reservation.dto.ReservationDetailResponse;
@@ -25,6 +26,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final GuesthouseReader guesthouseReader;
+    private final AcornLedger acornLedger;
 
     /** 유저의 유효한 예약 목록 (체크아웃이 오늘 이후인 건). */
     public List<ReservationSummaryResponse> getMyReservations(Long userId) {
@@ -56,6 +58,9 @@ public class ReservationService {
 
         long nights = ChronoUnit.DAYS.between(req.startDate(), req.endDate());
         int cost = guesthouse.price() * (int) nights;
+
+        // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
+        acornLedger.spend(userId, cost, "RESERVATION");
 
         Reservation reservation = Reservation.builder()
                 .userId(userId)
