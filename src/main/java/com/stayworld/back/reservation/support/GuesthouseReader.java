@@ -5,8 +5,7 @@ import java.util.Map;
 
 /**
  * reservation 도메인이 숙소 정보를 읽어오는 포트(인터페이스).
- * guesthouse 도메인(또는 그 어댑터)이 이 인터페이스를 구현해 빈으로 등록하면 된다.
- * 그 전까지는 {@link StubGuesthouseReader} 가 임시로 채운다.
+ * guesthouse 도메인의 {@code GuesthouseReaderAdapter} 가 이 인터페이스를 구현해 빈으로 등록한다.
  */
 public interface GuesthouseReader {
 
