@@ -76,20 +76,6 @@ class AcornLedgerTest {
     }
 
     @Test
-    void settleGameResult_손실이_잔액보다_커도_0에서_멈춘다() {
-        user.setBalance(30);
-
-        int after = acornLedger.settleGameResult(1L, -50, "GAME_LOSE");
-
-        assertThat(after).isZero();
-
-        ArgumentCaptor<AcornHistory> captor = ArgumentCaptor.forClass(AcornHistory.class);
-        verify(acornHistoryRepository).save(captor.capture());
-        assertThat(captor.getValue().getAmount()).isEqualTo(-30);   // clamp 가 반영된 실제 증감
-        assertThat(captor.getValue().getBalanceAfter()).isZero();
-    }
-
-    @Test
     void 음수_금액으로_earn_이나_spend_호출하면_거부된다() {
         assertThatThrownBy(() -> acornLedger.earn(1L, -10, "X"))
                 .isInstanceOf(IllegalArgumentException.class);

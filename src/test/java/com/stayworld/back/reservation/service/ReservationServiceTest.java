@@ -1,5 +1,7 @@
 package com.stayworld.back.reservation.service;
 
+import com.stayworld.back.acorn.exception.InsufficientAcornException;
+import com.stayworld.back.acorn.service.AcornLedger;
 import com.stayworld.back.global.exception.NotFoundException;
 import com.stayworld.back.reservation.dto.ReservationCreateRequest;
 import com.stayworld.back.reservation.dto.ReservationDetailResponse;
@@ -37,6 +39,8 @@ class ReservationServiceTest {
     ReservationRepository reservationRepository;
     @Mock
     GuesthouseReader guesthouseReader;
+    @Mock
+    AcornLedger acornLedger;
     @InjectMocks
     ReservationService reservationService;
 
@@ -87,6 +91,7 @@ class ReservationServiceTest {
 
         ReservationDetailResponse res = reservationService.getReservation(10L, 1L);
 
+        assertThat(res.reservationId()).isEqualTo(10L);
         assertThat(res.guesthouseId()).isEqualTo(100L);
         assertThat(res.cost()).isEqualTo(30_000);
         assertThat(res.capacity()).isEqualTo(4);
@@ -128,6 +133,8 @@ class ReservationServiceTest {
 
         assertThat(id).isEqualTo(50L);
 
+        verify(acornLedger).spend(1L, 30_000, "RESERVATION");   // 10,000 * 3박
+
         ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
         verify(reservationRepository).save(captor.capture());
         Reservation saved = captor.getValue();
@@ -138,6 +145,20 @@ class ReservationServiceTest {
     }
 
     @Test
+    void create_도토리_잔액이_부족하면_400이고_예약을_저장하지_않는다() {
+        when(guesthouseReader.read(100L)).thenReturn(guesthouse(100L, 10_000, 4));
+        when(reservationRepository.existsByGuesthouseIdAndStartDateLessThanAndEndDateGreaterThan(eq(100L), any(), any()))
+                .thenReturn(false);
+        when(acornLedger.spend(1L, 30_000, "RESERVATION"))
+                .thenThrow(new InsufficientAcornException(10_000, 30_000));
+
+        assertThatThrownBy(() -> reservationService.create(1L, request(100L, IN, OUT, 2)))
+                .isInstanceOf(InsufficientAcornException.class);
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
     void create_체크아웃이_체크인보다_뒤가_아니면_400() {
         when(guesthouseReader.read(100L)).thenReturn(guesthouse(100L, 10_000, 4));
 
@@ -145,6 +166,7 @@ class ReservationServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(acornLedger);
     }
 
     @Test
@@ -156,6 +178,7 @@ class ReservationServiceTest {
                 .hasMessageContaining("수용 인원");
 
         verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(acornLedger);
     }
 
     @Test
@@ -169,6 +192,7 @@ class ReservationServiceTest {
                 .hasMessageContaining("이미 예약");
 
         verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(acornLedger);
     }
 
     @Test
@@ -179,27 +203,30 @@ class ReservationServiceTest {
                 .isInstanceOf(NotFoundException.class);
 
         verify(reservationRepository, never()).save(any());
+        verifyNoInteractions(acornLedger);
     }
 
     // ---- delete ----
 
     @Test
-    void delete_본인_예약이면_삭제한다() {
+    void delete_본인_예약이면_삭제하고_도토리를_전액_환불한다() {
         Reservation r = reservation(10L, 1L, 100L);
         when(reservationRepository.findById(10L)).thenReturn(Optional.of(r));
 
         reservationService.delete(10L, 1L);
 
         verify(reservationRepository).delete(r);
+        verify(acornLedger).earn(1L, 30_000, "RESERVATION_CANCEL");   // r 의 cost
     }
 
     @Test
-    void delete_남의_예약이면_404이고_삭제하지_않는다() {
+    void delete_남의_예약이면_404이고_삭제나_환불을_하지_않는다() {
         when(reservationRepository.findById(10L)).thenReturn(Optional.of(reservation(10L, 1L, 100L)));
 
         assertThatThrownBy(() -> reservationService.delete(10L, 2L))
                 .isInstanceOf(NotFoundException.class);
 
         verify(reservationRepository, never()).delete(any());
+        verifyNoInteractions(acornLedger);
     }
 }

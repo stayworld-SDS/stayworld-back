@@ -1,5 +1,6 @@
 package com.stayworld.back.reservation.service;
 
+import com.stayworld.back.acorn.service.AcornLedger;
 import com.stayworld.back.global.exception.NotFoundException;
 import com.stayworld.back.reservation.dto.ReservationCreateRequest;
 import com.stayworld.back.reservation.dto.ReservationDetailResponse;
@@ -23,8 +24,12 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ReservationService {
 
+    private static final String REASON_PAYMENT = "RESERVATION";
+    private static final String REASON_CANCEL = "RESERVATION_CANCEL";
+
     private final ReservationRepository reservationRepository;
     private final GuesthouseReader guesthouseReader;
+    private final AcornLedger acornLedger;
 
     /** 유저의 유효한 예약 목록 (체크아웃이 오늘 이후인 건). */
     public List<ReservationSummaryResponse> getMyReservations(Long userId) {
@@ -57,6 +62,9 @@ public class ReservationService {
         long nights = ChronoUnit.DAYS.between(req.startDate(), req.endDate());
         int cost = guesthouse.price() * (int) nights;
 
+        // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
+        acornLedger.spend(userId, cost, REASON_PAYMENT);
+
         Reservation reservation = Reservation.builder()
                 .userId(userId)
                 .guesthouseId(req.guesthouseId())
@@ -69,10 +77,12 @@ public class ReservationService {
         return reservationRepository.save(reservation).getId();
     }
 
+    /** 예약 취소. 결제한 도토리를 전액 환불한다. */
     @Transactional
     public void delete(Long reservationId, Long currentUserId) {
         Reservation reservation = findOwnedReservation(reservationId, currentUserId);
         reservationRepository.delete(reservation);
+        acornLedger.earn(currentUserId, reservation.getCost(), REASON_CANCEL);
     }
 
     // --- helpers ---
