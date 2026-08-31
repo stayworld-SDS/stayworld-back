@@ -8,6 +8,8 @@ import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +24,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/users")
-    public ApiResponse<UserDto> createUser(@RequestBody CreateDto dto) {
+    public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
         return ApiResponse.success("유저 생성에 성공하였습니다.", userService.createUser(dto));
     }
 
@@ -37,7 +39,9 @@ public class UserController {
     }
 
     @GetMapping("/users/check-email/{email}")
-    public ApiResponse<Boolean> checkEmailOccupancy(@PathVariable("email") String email) {
+    public ApiResponse<Boolean> checkEmailOccupancy(
+            @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$")
+            @PathVariable("email") String email) {
         return ApiResponse.success(userService.checkEmailOccupancy(email));
     }
 
