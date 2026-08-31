@@ -9,6 +9,9 @@ import com.stayworld.back.global.auth.LoginMember;
 import com.stayworld.back.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,10 +30,12 @@ public class AcornController {
         return ApiResponse.success(acornService.play(userId, request.winAmount()));
     }
 
-    // 도토리 사용/습득 내역 조회
+    // 도토리 사용/습득 내역 조회 (페이지네이션). ?page=0&size=20&sort=id,desc
     @GetMapping("/acorns/history")
-    public ApiResponse<AcornHistoryResponse> getHistory(@LoginMember Long userId) {
-        return ApiResponse.success(acornService.history(userId));
+    public ApiResponse<AcornHistoryResponse> getHistory(
+            @LoginMember Long userId,
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.success(acornService.history(userId, pageable));
     }
 
     // 내 현재 도토리 잔액, 오늘 게임 참여 여부

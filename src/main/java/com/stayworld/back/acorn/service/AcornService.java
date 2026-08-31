@@ -9,6 +9,8 @@ import com.stayworld.back.acorn.repository.AcornHistoryRepository;
 import com.stayworld.back.global.exception.NotFoundException;
 import com.stayworld.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,9 @@ public class AcornService {
 
     /** 하루 참여 제한. */
     public static final int DAILY_PLAY_LIMIT = 10;
+
+    /** GET /acorns/history 한 페이지 최대 개수. 클라이언트가 더 큰 size 를 요청해도 이 이상은 안 준다. */
+    private static final int MAX_HISTORY_PAGE_SIZE = 100;
 
     private final AcornLedger acornLedger;
     private final AcornHistoryRepository acornHistoryRepository;
@@ -59,8 +64,11 @@ public class AcornService {
         return new GamePlayResponse(balance);
     }
 
-    public AcornHistoryResponse history(Long userId) {
-        return AcornHistoryResponse.from(acornHistoryRepository.findByUserIdOrderByIdDesc(userId));
+    public AcornHistoryResponse history(Long userId, Pageable pageable) {
+        Pageable capped = pageable.getPageSize() > MAX_HISTORY_PAGE_SIZE
+                ? PageRequest.of(pageable.getPageNumber(), MAX_HISTORY_PAGE_SIZE, pageable.getSort())
+                : pageable;
+        return AcornHistoryResponse.from(acornHistoryRepository.findByUserId(userId, capped));
     }
 
     public AcornMeResponse me(Long userId) {

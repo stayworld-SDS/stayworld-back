@@ -8,8 +8,10 @@ import com.stayworld.back.acorn.dto.GamePlayResponse;
 import com.stayworld.back.acorn.service.AcornService;
 import com.stayworld.back.global.auth.LoginMemberArgumentResolver;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,6 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -112,16 +118,36 @@ class AcornControllerTest {
     }
 
     @Test
-    void getHistory_정상이면_내역을_반환한다() throws Exception {
+    void getHistory_정상이면_내역과_페이지_정보를_반환한다() throws Exception {
         var item = new AcornHistoryResponse.Item("RESERVATION", -30_000, 20_000, LocalDateTime.of(2026, 8, 31, 12, 0));
-        when(acornService.history(1L)).thenReturn(new AcornHistoryResponse(List.of(item)));
+        when(acornService.history(eq(1L), any()))
+                .thenReturn(new AcornHistoryResponse(List.of(item), 0, 20, 1, 1, false));
 
         mockMvc.perform(get("/acorns/history").session(loginSession(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.history[0].reason").value("RESERVATION"))
                 .andExpect(jsonPath("$.data.history[0].amount").value(-30_000))
-                .andExpect(jsonPath("$.data.history[0].balance").value(20_000));
+                .andExpect(jsonPath("$.data.history[0].balance").value(20_000))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    void getHistory_page_size_쿼리파라미터가_그대로_전달된다() throws Exception {
+        when(acornService.history(eq(1L), any()))
+                .thenReturn(new AcornHistoryResponse(List.of(), 2, 5, 11, 3, false));
+
+        mockMvc.perform(get("/acorns/history?page=2&size=5").session(loginSession(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page").value(2))
+                .andExpect(jsonPath("$.data.size").value(5));
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(acornService).history(eq(1L), captor.capture());
+        assertThat(captor.getValue().getPageNumber()).isEqualTo(2);
+        assertThat(captor.getValue().getPageSize()).isEqualTo(5);
     }
 
     // ---- GET /acorns/me ----
