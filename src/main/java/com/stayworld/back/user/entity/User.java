@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 @Entity
-@Component
 @Table(name = "users")
 @Getter
 @Setter
