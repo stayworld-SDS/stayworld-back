@@ -1,8 +1,8 @@
 package com.stayworld.back.user.service;
 
 import com.stayworld.back.global.exception.UnauthorizedException;
+import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
-import com.stayworld.back.auth.dto.LoginDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.entity.User;
@@ -20,7 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserDto createUser(UserDto dto) {
+    public UserDto createUser(CreateDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }

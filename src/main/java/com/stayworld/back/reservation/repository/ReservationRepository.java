@@ -11,6 +11,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     /** 유저의 '유효한'(체크아웃이 오늘 이후) 예약 목록. */
     List<Reservation> findByUserIdAndEndDateGreaterThanEqualOrderByStartDateAsc(Long userId, LocalDate today);
 
+    /** 유저가 다녀온(체크아웃이 오늘 이전) 예약 목록, 최근 순. */
+    List<Reservation> findByUserIdAndEndDateLessThanOrderByStartDateDesc(Long userId, LocalDate today);
+
     /**
      * 같은 숙소에 대해 기간이 겹치는 예약이 있는지.
      * 겹침 조건: 기존.startDate < 요청.endDate AND 기존.endDate > 요청.startDate

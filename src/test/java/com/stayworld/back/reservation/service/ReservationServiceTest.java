@@ -82,6 +82,21 @@ class ReservationServiceTest {
         assertThat(result.get(1).guesthouseId()).isEqualTo(200L);
     }
 
+    // ---- getReservationHistory ----
+
+    @Test
+    void getReservationHistory_체크아웃이_지난_예약을_숙소정보와_함께_반환한다() {
+        when(reservationRepository.findByUserIdAndEndDateLessThanOrderByStartDateDesc(eq(1L), any(LocalDate.class)))
+                .thenReturn(List.of(reservation(10L, 1L, 100L)));
+        when(guesthouseReader.readAll(any())).thenReturn(Map.of(100L, guesthouse(100L, 10_000, 4)));
+
+        List<ReservationSummaryResponse> result = reservationService.getReservationHistory(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).reservationId()).isEqualTo(10L);
+        assertThat(result.get(0).guesthouseName()).isEqualTo("게하100");
+    }
+
     // ---- getReservation ----
 
     @Test
