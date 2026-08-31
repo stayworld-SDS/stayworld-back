@@ -208,22 +208,24 @@ class ReservationServiceTest {
     // ---- delete ----
 
     @Test
-    void delete_본인_예약이면_삭제한다() {
+    void delete_본인_예약이면_삭제하고_도토리를_전액_환불한다() {
         Reservation r = reservation(10L, 1L, 100L);
         when(reservationRepository.findById(10L)).thenReturn(Optional.of(r));
 
         reservationService.delete(10L, 1L);
 
         verify(reservationRepository).delete(r);
+        verify(acornLedger).earn(1L, 30_000, "RESERVATION_CANCEL");   // r 의 cost
     }
 
     @Test
-    void delete_남의_예약이면_404이고_삭제하지_않는다() {
+    void delete_남의_예약이면_404이고_삭제나_환불을_하지_않는다() {
         when(reservationRepository.findById(10L)).thenReturn(Optional.of(reservation(10L, 1L, 100L)));
 
         assertThatThrownBy(() -> reservationService.delete(10L, 2L))
                 .isInstanceOf(NotFoundException.class);
 
         verify(reservationRepository, never()).delete(any());
+        verifyNoInteractions(acornLedger);
     }
 }

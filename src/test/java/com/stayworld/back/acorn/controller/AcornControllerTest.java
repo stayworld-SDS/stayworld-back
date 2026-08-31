@@ -1,13 +1,16 @@
 package com.stayworld.back.acorn.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stayworld.back.acorn.dto.AcornHistoryResponse;
 import com.stayworld.back.acorn.dto.AcornMeResponse;
+import com.stayworld.back.acorn.dto.GamePlayRequest;
 import com.stayworld.back.acorn.dto.GamePlayResponse;
 import com.stayworld.back.acorn.service.AcornService;
 import com.stayworld.back.global.auth.LoginMemberArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,14 +26,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * {@link AcornController} HTTP 레이어 테스트.
- * 세션 유무에 따른 {@code @LoginMember} 동작(401)과, 서비스 예외가 응답 JSON(400)으로
- * 어떻게 매핑되는지를 {@link com.stayworld.back.global.exception.GlobalExceptionHandler} 까지 통째로 검증한다.
+ * 세션 유무에 따른 {@code @LoginMember} 동작(401), {@code @Valid} 동작(400), 서비스 예외가
+ * 응답 JSON(400)으로 어떻게 매핑되는지를 {@link com.stayworld.back.global.exception.GlobalExceptionHandler}
+ * 까지 통째로 검증한다.
  */
 @WebMvcTest(AcornController.class)
 class AcornControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    // 요청 바디 직렬화용. 슬라이스 컨텍스트에 Jackson 자동 설정이 안 딸려와서 직접 만든다.
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @MockitoBean
     AcornService acornService;
@@ -41,11 +48,17 @@ class AcornControllerTest {
         return session;
     }
 
+    private String body(int winAmount) throws Exception {
+        return objectMapper.writeValueAsString(new GamePlayRequest(winAmount));
+    }
+
     // ---- POST /games ----
 
     @Test
     void playGame_세션없으면_401() throws Exception {
-        mockMvc.perform(post("/games"))
+        mockMvc.perform(post("/games")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(0)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("인증이 필요합니다."));
@@ -53,25 +66,39 @@ class AcornControllerTest {
 
     @Test
     void playGame_정상이면_결과를_반환한다() throws Exception {
-        when(acornService.play(1L)).thenReturn(new GamePlayResponse(80_000, 7, 7, 7));
+        when(acornService.play(1L, 500)).thenReturn(new GamePlayResponse(10_400));
 
-        mockMvc.perform(post("/games").session(loginSession(1L)))
+        mockMvc.perform(post("/games")
+                        .session(loginSession(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(500)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.acorns").value(80_000))
-                .andExpect(jsonPath("$.data.first").value(7))
-                .andExpect(jsonPath("$.data.second").value(7))
-                .andExpect(jsonPath("$.data.third").value(7));
+                .andExpect(jsonPath("$.data.acorns").value(10_400));
     }
 
     @Test
-    void playGame_오늘_이미_참여했으면_400() throws Exception {
-        when(acornService.play(1L)).thenThrow(new IllegalArgumentException("오늘은 이미 게임에 참여했습니다."));
+    void playGame_획득량이_음수면_400() throws Exception {
+        mockMvc.perform(post("/games")
+                        .session(loginSession(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(-1)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
 
-        mockMvc.perform(post("/games").session(loginSession(1L)))
+    @Test
+    void playGame_오늘_참여횟수_상한이면_400() throws Exception {
+        when(acornService.play(1L, 0))
+                .thenThrow(new IllegalArgumentException("오늘 게임 참여 횟수(10회)를 모두 사용했습니다."));
+
+        mockMvc.perform(post("/games")
+                        .session(loginSession(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(0)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("오늘은 이미 게임에 참여했습니다."))
+                .andExpect(jsonPath("$.message").value("오늘 게임 참여 횟수(10회)를 모두 사용했습니다."))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 
@@ -107,13 +134,14 @@ class AcornControllerTest {
     }
 
     @Test
-    void getMyAcorn_정상이면_잔액과_참여여부를_반환한다() throws Exception {
-        when(acornService.me(1L)).thenReturn(new AcornMeResponse(50_000, true));
+    void getMyAcorn_정상이면_잔액과_참여횟수_상한을_반환한다() throws Exception {
+        when(acornService.me(1L)).thenReturn(new AcornMeResponse(50_000, 4, 10));
 
         mockMvc.perform(get("/acorns/me").session(loginSession(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.balance").value(50_000))
-                .andExpect(jsonPath("$.data.participated").value(true));
+                .andExpect(jsonPath("$.data.playCount").value(4))
+                .andExpect(jsonPath("$.data.dailyLimit").value(10));
     }
 }

@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ReservationService {
 
+    private static final String REASON_PAYMENT = "RESERVATION";
+    private static final String REASON_CANCEL = "RESERVATION_CANCEL";
+
     private final ReservationRepository reservationRepository;
     private final GuesthouseReader guesthouseReader;
     private final AcornLedger acornLedger;
@@ -60,7 +63,7 @@ public class ReservationService {
         int cost = guesthouse.price() * (int) nights;
 
         // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
-        acornLedger.spend(userId, cost, "RESERVATION");
+        acornLedger.spend(userId, cost, REASON_PAYMENT);
 
         Reservation reservation = Reservation.builder()
                 .userId(userId)
@@ -74,10 +77,12 @@ public class ReservationService {
         return reservationRepository.save(reservation).getId();
     }
 
+    /** 예약 취소. 결제한 도토리를 전액 환불한다. */
     @Transactional
     public void delete(Long reservationId, Long currentUserId) {
         Reservation reservation = findOwnedReservation(reservationId, currentUserId);
         reservationRepository.delete(reservation);
+        acornLedger.earn(currentUserId, reservation.getCost(), REASON_CANCEL);
     }
 
     // --- helpers ---
