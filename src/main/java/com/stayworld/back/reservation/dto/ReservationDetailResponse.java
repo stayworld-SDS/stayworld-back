@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 /** GET /reservations/{reservationId} 상세. */
 public record ReservationDetailResponse(
+        Long reservationId,
         Long guesthouseId,
         String guesthouseName,
         LocalDate startDate,
@@ -21,6 +22,7 @@ public record ReservationDetailResponse(
 ) {
     public static ReservationDetailResponse from(Reservation r, GuesthouseInfo g) {
         return new ReservationDetailResponse(
+                r.getId(),
                 g.id(),
                 g.name(),
                 r.getStartDate(),

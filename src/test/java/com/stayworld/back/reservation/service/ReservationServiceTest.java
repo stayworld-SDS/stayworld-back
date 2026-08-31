@@ -91,6 +91,7 @@ class ReservationServiceTest {
 
         ReservationDetailResponse res = reservationService.getReservation(10L, 1L);
 
+        assertThat(res.reservationId()).isEqualTo(10L);
         assertThat(res.guesthouseId()).isEqualTo(100L);
         assertThat(res.cost()).isEqualTo(30_000);
         assertThat(res.capacity()).isEqualTo(4);
