@@ -19,7 +19,6 @@ public interface DailyOccupancyRepository extends JpaRepository<DailyOccupancy, 
         WHERE o.guesthouse.id = :guesthouseId
             AND o.date >= :startDate
             AND o.date < :endDate
-            AND o.totalHeadcount >= :headcount
     """)
     int findMaxOccupancyByGuesthouseAndDateRange(
             long guesthouseId,
@@ -89,6 +88,7 @@ public interface DailyOccupancyRepository extends JpaRepository<DailyOccupancy, 
         WHERE o.guesthouse.id = :guesthouseId
             AND o.date >= :startDate
             AND o.date < :endDate
+            AND o.totalHeadcount >= :headcount
     """)
     int decreaseOccupancy(
             long guesthouseId,
