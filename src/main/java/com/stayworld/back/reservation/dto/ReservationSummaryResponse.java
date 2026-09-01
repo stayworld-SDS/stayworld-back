@@ -1,7 +1,7 @@
 package com.stayworld.back.reservation.dto;
 
+import com.stayworld.back.guesthouse.entity.Guesthouse;
 import com.stayworld.back.reservation.entity.Reservation;
-import com.stayworld.back.reservation.support.GuesthouseInfo;
 
 import java.time.LocalDate;
 
@@ -14,11 +14,11 @@ public record ReservationSummaryResponse(
         LocalDate endDate,
         int headcount
 ) {
-    public static ReservationSummaryResponse from(Reservation r, GuesthouseInfo g) {
+    public static ReservationSummaryResponse from(Reservation r, Guesthouse g) {
         return new ReservationSummaryResponse(
                 r.getId(),
-                g.id(),
-                g.name(),
+                g.getId(),
+                g.getName(),
                 r.getStartDate(),
                 r.getEndDate(),
                 r.getHeadcount()
