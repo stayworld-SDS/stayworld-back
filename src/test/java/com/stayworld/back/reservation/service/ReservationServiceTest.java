@@ -86,9 +86,9 @@ class ReservationServiceTest {
         List<ReservationSummaryResponse> result = reservationService.getMyReservations(1L);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).reservationId()).isEqualTo(10L);
-        assertThat(result.get(0).guesthouseName()).isEqualTo("게하100");
-        assertThat(result.get(1).guesthouseId()).isEqualTo(200L);
+        assertThat(result.get(0).getReservationId()).isEqualTo(10L);
+        assertThat(result.get(0).getGuesthouseName()).isEqualTo("게하100");
+        assertThat(result.get(1).getGuesthouseId()).isEqualTo(200L);
     }
 
     // ---- getReservationHistory ----
@@ -101,8 +101,8 @@ class ReservationServiceTest {
         List<ReservationSummaryResponse> result = reservationService.getReservationHistory(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).reservationId()).isEqualTo(10L);
-        assertThat(result.get(0).guesthouseName()).isEqualTo("게하100");
+        assertThat(result.get(0).getReservationId()).isEqualTo(10L);
+        assertThat(result.get(0).getGuesthouseName()).isEqualTo("게하100");
     }
 
     // ---- getReservation ----
@@ -113,11 +113,11 @@ class ReservationServiceTest {
 
         ReservationDetailResponse res = reservationService.getReservation(10L, 1L);
 
-        assertThat(res.reservationId()).isEqualTo(10L);
-        assertThat(res.guesthouseId()).isEqualTo(100L);
-        assertThat(res.cost()).isEqualTo(30_000);
-        assertThat(res.capacity()).isEqualTo(4);
-        assertThat(res.parking()).isTrue();
+        assertThat(res.getReservationId()).isEqualTo(10L);
+        assertThat(res.getGuesthouseId()).isEqualTo(100L);
+        assertThat(res.getCost()).isEqualTo(30_000);
+        assertThat(res.getCapacity()).isEqualTo(4);
+        assertThat(res.isParking()).isTrue();
     }
 
     @Test

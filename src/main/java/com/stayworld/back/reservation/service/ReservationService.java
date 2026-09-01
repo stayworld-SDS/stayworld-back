@@ -62,31 +62,31 @@ public class ReservationService {
 
     @Transactional
     public Long create(Long userId, ReservationCreateRequest req) {
-        Guesthouse guesthouse = guesthouseRepository.findById(req.guesthouseId())
+        Guesthouse guesthouse = guesthouseRepository.findById(req.getGuesthouseId())
                 .orElseThrow(GuesthouseNotFoundException::new); // 없으면 GuesthouseNotFoundException
 
-        validateDates(req.startDate(), req.endDate());
-        validateHeadcount(req.headcount(), req.startDate(), req.endDate(), guesthouse);
+        validateDates(req.getStartDate(), req.getEndDate());
+        validateHeadcount(req.getHeadcount(), req.getStartDate(), req.getEndDate(), guesthouse);
 
-        long nights = ChronoUnit.DAYS.between(req.startDate(), req.endDate());
+        long nights = ChronoUnit.DAYS.between(req.getStartDate(), req.getEndDate());
         int cost = guesthouse.getPrice() * (int) nights;
 
         // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
         acornLedger.spend(userId, cost, REASON_PAYMENT);
 
         // 방문자수 증가
-        guesthouse.setVisitorCount(guesthouse.getVisitorCount() + req.headcount());
+        guesthouse.setVisitorCount(guesthouse.getVisitorCount() + req.getHeadcount());
 
         Reservation reservation = Reservation.builder()
                 .userId(userId)
                 .guesthouse(guesthouse)
-                .startDate(req.startDate())
-                .endDate(req.endDate())
-                .headcount(req.headcount())
+                .startDate(req.getStartDate())
+                .endDate(req.getEndDate())
+                .headcount(req.getHeadcount())
                 .cost(cost)
                 .build();
 
-        dailyOccupancyRepository.increaseOccupancy(guesthouse.getId(), req.startDate(), req.endDate(), req.headcount());
+        dailyOccupancyRepository.increaseOccupancy(guesthouse.getId(), req.getStartDate(), req.getEndDate(), req.getHeadcount());
         return reservationRepository.save(reservation).getId();
     }
 
