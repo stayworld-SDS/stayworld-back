@@ -27,7 +27,7 @@ public class AcornController {
     @PostMapping("/games")
     public ApiResponse<GamePlayResponse> playGame(@LoginMember Long userId,
                                                    @Valid @RequestBody GamePlayRequest request) {
-        return ApiResponse.success(acornService.play(userId, request.winAmount()));
+        return ApiResponse.success(acornService.play(userId, request.getWinAmount()));
     }
 
     // 도토리 사용/습득 내역 조회 (페이지네이션). ?page=0&size=20&sort=id,desc

@@ -66,7 +66,7 @@ class AcornServiceTest {
 
         GamePlayResponse res = acornService.play(1L, 500);
 
-        assertThat(res.acorns()).isEqualTo(10_400);
+        assertThat(res.getAcorns()).isEqualTo(10_400);
         verify(acornDailyPlayRepository).save(any());
         verify(acornLedger).spend(1L, 100, "GAME_ENTRY");
         verify(acornLedger).earn(1L, 500, "GAME_WIN");
@@ -79,7 +79,7 @@ class AcornServiceTest {
 
         GamePlayResponse res = acornService.play(1L, 0);
 
-        assertThat(res.acorns()).isEqualTo(9_900);
+        assertThat(res.getAcorns()).isEqualTo(9_900);
         verify(acornLedger, never()).earn(any(), anyInt(), any());
     }
 
@@ -92,9 +92,9 @@ class AcornServiceTest {
 
         var res = acornService.me(1L);
 
-        assertThat(res.balance()).isEqualTo(120);
-        assertThat(res.playCount()).isEqualTo(4);
-        assertThat(res.dailyLimit()).isEqualTo(AcornService.DAILY_PLAY_LIMIT);
+        assertThat(res.getBalance()).isEqualTo(120);
+        assertThat(res.getPlayCount()).isEqualTo(4);
+        assertThat(res.getDailyLimit()).isEqualTo(AcornService.DAILY_PLAY_LIMIT);
     }
 
     @Test
@@ -107,8 +107,8 @@ class AcornServiceTest {
 
         AcornHistoryResponse res = acornService.history(1L, pageable);
 
-        assertThat(res.history()).hasSize(1);
-        assertThat(res.totalElements()).isEqualTo(1);
+        assertThat(res.getHistory()).hasSize(1);
+        assertThat(res.getTotalElements()).isEqualTo(1);
         verify(acornHistoryRepository).findByUserId(1L, pageable);
     }
 
