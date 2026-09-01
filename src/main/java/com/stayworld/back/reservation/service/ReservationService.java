@@ -2,33 +2,37 @@ package com.stayworld.back.reservation.service;
 
 import com.stayworld.back.acorn.service.AcornLedger;
 import com.stayworld.back.global.exception.NotFoundException;
+import com.stayworld.back.guesthouse.entity.Guesthouse;
+import com.stayworld.back.guesthouse.exception.GuesthouseNotFoundException;
+import com.stayworld.back.guesthouse.repository.GuesthouseRepository;
 import com.stayworld.back.reservation.dto.ReservationCreateRequest;
 import com.stayworld.back.reservation.dto.ReservationDetailResponse;
 import com.stayworld.back.reservation.dto.ReservationSummaryResponse;
 import com.stayworld.back.reservation.entity.Reservation;
+import com.stayworld.back.reservation.repository.DailyOccupancyRepository;
 import com.stayworld.back.reservation.repository.ReservationRepository;
-import com.stayworld.back.reservation.support.GuesthouseInfo;
-import com.stayworld.back.reservation.support.GuesthouseReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReservationService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private static final String REASON_PAYMENT = "RESERVATION";
     private static final String REASON_CANCEL = "RESERVATION_CANCEL";
 
     private final ReservationRepository reservationRepository;
-    private final GuesthouseReader guesthouseReader;
+    private final DailyOccupancyRepository dailyOccupancyRepository;
+    private final GuesthouseRepository guesthouseRepository;
     private final AcornLedger acornLedger;
 
     /** 유저의 유효한 예약 목록 (체크아웃이 오늘 이후인 건, 체크인 빠른 순). */
@@ -44,44 +48,45 @@ public class ReservationService {
     }
 
     private List<ReservationSummaryResponse> toSummaries(List<Reservation> reservations) {
-        Map<Long, GuesthouseInfo> guesthouses = guesthouseReader.readAll(
-                reservations.stream().map(Reservation::getGuesthouseId).collect(Collectors.toSet()));
 
         return reservations.stream()
-                .map(r -> ReservationSummaryResponse.from(r, guesthouses.get(r.getGuesthouseId())))
+                .map(r -> ReservationSummaryResponse.from(r, r.getGuesthouse()))
                 .toList();
     }
 
     /** 예약 상세. 없거나 남의 예약이면 404 (존재 여부를 숨긴다). */
     public ReservationDetailResponse getReservation(Long reservationId, Long currentUserId) {
         Reservation reservation = findOwnedReservation(reservationId, currentUserId);
-        GuesthouseInfo guesthouse = guesthouseReader.read(reservation.getGuesthouseId());
-        return ReservationDetailResponse.from(reservation, guesthouse);
+        return ReservationDetailResponse.from(reservation, reservation.getGuesthouse());
     }
 
     @Transactional
     public Long create(Long userId, ReservationCreateRequest req) {
-        GuesthouseInfo guesthouse = guesthouseReader.read(req.guesthouseId());  // 없으면 NotFoundException
+        Guesthouse guesthouse = guesthouseRepository.findById(req.guesthouseId())
+                .orElseThrow(GuesthouseNotFoundException::new); // 없으면 GuesthouseNotFoundException
 
         validateDates(req.startDate(), req.endDate());
-        validateHeadcount(req.headcount(), guesthouse.capacity());
-        validateNoOverlap(req.guesthouseId(), req.startDate(), req.endDate());
+        validateHeadcount(req.headcount(), req.startDate(), req.endDate(), guesthouse);
 
         long nights = ChronoUnit.DAYS.between(req.startDate(), req.endDate());
-        int cost = guesthouse.price() * (int) nights;
+        int cost = guesthouse.getPrice() * (int) nights;
 
         // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
         acornLedger.spend(userId, cost, REASON_PAYMENT);
 
+        // 방문자수 증가
+        guesthouse.setVisitorCount(guesthouse.getVisitorCount() + req.headcount());
+
         Reservation reservation = Reservation.builder()
                 .userId(userId)
-                .guesthouseId(req.guesthouseId())
+                .guesthouse(guesthouse)
                 .startDate(req.startDate())
                 .endDate(req.endDate())
                 .headcount(req.headcount())
                 .cost(cost)
                 .build();
 
+        dailyOccupancyRepository.increaseOccupancy(guesthouse.getId(), req.startDate(), req.endDate(), req.headcount());
         return reservationRepository.save(reservation).getId();
     }
 
@@ -89,7 +94,27 @@ public class ReservationService {
     @Transactional
     public void delete(Long reservationId, Long currentUserId) {
         Reservation reservation = findOwnedReservation(reservationId, currentUserId);
+        if (!reservation.getStartDate().isAfter(LocalDate.now(KST))) {
+            throw new IllegalArgumentException("체크인 전 예약만 취소할 수 있습니다.");
+        }
+
+        Guesthouse guesthouse = reservation.getGuesthouse();
+        if (guesthouse.getVisitorCount() < reservation.getHeadcount()) {
+            throw new IllegalStateException("숙소 방문자 수가 예약 인원보다 적습니다.");
+        }
+
+        int updatedDays = dailyOccupancyRepository.decreaseOccupancy(
+                guesthouse.getId(), reservation.getStartDate(), reservation.getEndDate(), reservation.getHeadcount()
+        );
+        int nights = (int) ChronoUnit.DAYS.between(reservation.getStartDate(), reservation.getEndDate());
+        if (updatedDays != nights) {
+            throw new IllegalStateException("예약 기간의 점유 인원을 복구하지 못했습니다.");
+        }
+
+        guesthouse.setVisitorCount(guesthouse.getVisitorCount() - reservation.getHeadcount());
+        guesthouseRepository.save(guesthouse);
         reservationRepository.delete(reservation);
+
         acornLedger.earn(currentUserId, reservation.getCost(), REASON_CANCEL);
     }
 
@@ -112,17 +137,12 @@ public class ReservationService {
         }
     }
 
-    private void validateHeadcount(int headcount, int capacity) {
-        if (headcount > capacity) {
-            throw new IllegalArgumentException("숙소 수용 인원(" + capacity + "명)을 초과했습니다.");
-        }
-    }
+    private void validateHeadcount(int headcount, LocalDate startDate, LocalDate endDate, Guesthouse guesthouse) {
 
-    private void validateNoOverlap(Long guesthouseId, LocalDate start, LocalDate end) {
-        boolean overlaps = reservationRepository
-                .existsByGuesthouseIdAndStartDateLessThanAndEndDateGreaterThan(guesthouseId, end, start);
-        if (overlaps) {
-            throw new IllegalArgumentException("해당 기간에 이미 예약이 있습니다.");
+        int maxOccupancy = dailyOccupancyRepository.findMaxOccupancyByGuesthouseAndDateRange(guesthouse.getId(), startDate, endDate);
+        int availability = guesthouse.getCapacity() - maxOccupancy;
+        if (headcount > availability) {
+            throw new IllegalArgumentException("수용 가능 인원(" + availability + "명)을 초과했습니다.");
         }
     }
 }
