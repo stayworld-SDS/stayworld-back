@@ -1,12 +1,7 @@
 package com.stayworld.back.reservation.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import com.stayworld.back.guesthouse.entity.Guesthouse;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,9 +24,9 @@ public class Reservation {
     @Column(nullable = false)
     private Long userId;
 
-    /** guesthouse 도메인을 건드리지 않으려고 연관관계 대신 스칼라 FK. 숙소 정보는 GuesthouseReader 로 조회. */
-    @Column(name = "guesthouse_id", nullable = false)
-    private Long guesthouseId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guesthouse_id", nullable = false)
+    private Guesthouse guesthouse;
 
     @Column(nullable = false)
     private LocalDate startDate;   // 체크인
@@ -49,10 +44,10 @@ public class Reservation {
     private LocalDateTime createdAt;
 
     @Builder
-    private Reservation(Long userId, Long guesthouseId, LocalDate startDate,
+    private Reservation(Long userId, Guesthouse guesthouse, LocalDate startDate,
                         LocalDate endDate, int headcount, int cost) {
         this.userId = userId;
-        this.guesthouseId = guesthouseId;
+        this.guesthouse = guesthouse;
         this.startDate = startDate;
         this.endDate = endDate;
         this.headcount = headcount;

@@ -1,39 +1,46 @@
 package com.stayworld.back.reservation.dto;
 
+import com.stayworld.back.guesthouse.entity.Guesthouse;
 import com.stayworld.back.reservation.entity.Reservation;
-import com.stayworld.back.reservation.support.GuesthouseInfo;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 /** GET /reservations/{reservationId} 상세. */
-public record ReservationDetailResponse(
-        Long reservationId,
-        Long guesthouseId,
-        String guesthouseName,
-        LocalDate startDate,
-        LocalDate endDate,
-        int headcount,
-        int cost,
-        String address,
-        int capacity,
-        boolean parking,
-        boolean wifi,
-        boolean breakfast
-) {
-    public static ReservationDetailResponse from(Reservation r, GuesthouseInfo g) {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ReservationDetailResponse {
+
+    private Long reservationId;
+    private Long guesthouseId;
+    private String guesthouseName;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private int headcount;
+    private int cost;
+    private String address;
+    private int capacity;
+    private boolean parking;
+    private boolean wifi;
+    private boolean breakfast;
+
+    public static ReservationDetailResponse from(Reservation r, Guesthouse g) {
         return new ReservationDetailResponse(
                 r.getId(),
-                g.id(),
-                g.name(),
+                g.getId(),
+                g.getName(),
                 r.getStartDate(),
                 r.getEndDate(),
                 r.getHeadcount(),
                 r.getCost(),
-                g.address(),
-                g.capacity(),
-                g.parking(),
-                g.wifi(),
-                g.breakfast()
+                g.getAddress(),
+                g.getCapacity(),
+                g.isParkingProvided(),
+                g.isWifiProvided(),
+                g.isBreakfastProvided()
         );
     }
 }

@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(name="guesthouses")
 public class Guesthouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,11 +23,11 @@ public class Guesthouse {
     @Column(nullable = false)
     private int capacity;
     @Column(nullable = false)
-    private boolean parking;
+    private boolean parkingProvided;
     @Column(nullable = false)
-    private boolean wifi;
+    private boolean wifiProvided;
     @Column(nullable = false)
-    private boolean breakfast;
+    private boolean breakfastProvided;
     @Column(length = 500)
     private String introduction;
     @Column(nullable = false)

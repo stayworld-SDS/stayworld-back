@@ -2,6 +2,11 @@ package com.stayworld.back.reservation.repository;
 
 import com.stayworld.back.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Pageable;
+
+import jakarta.persistence.LockModeType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,10 +19,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     /** 유저가 다녀온(체크아웃이 오늘 이전) 예약 목록, 최근 순. */
     List<Reservation> findByUserIdAndEndDateLessThanOrderByStartDateDesc(Long userId, LocalDate today);
 
-    /**
-     * 같은 숙소에 대해 기간이 겹치는 예약이 있는지.
-     * 겹침 조건: 기존.startDate < 요청.endDate AND 기존.endDate > 요청.startDate
-     */
-    boolean existsByGuesthouseIdAndStartDateLessThanAndEndDateGreaterThan(
-            Long guesthouseId, LocalDate requestedEnd, LocalDate requestedStart);
+    @Query("SELECT COUNT(DISTINCT r.guesthouse.id) FROM Reservation r WHERE r.userId = :userId AND r.endDate < :today")
+    long countDistinctVisitedGuesthouses(Long userId, LocalDate today);
 }

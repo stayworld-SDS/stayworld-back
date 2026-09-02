@@ -1,11 +1,18 @@
 package com.stayworld.back.user.controller;
 
+import com.stayworld.back.friend.dto.FriendDto;
+import com.stayworld.back.friend.service.FriendService;
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
+import com.stayworld.back.guesthouse.dto.GuestbookPageResponse;
+import com.stayworld.back.profile.dto.ProfileGuestbookCreateRequest;
+import com.stayworld.back.profile.service.ProfileGuestbookService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
+import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.UserDto;
+import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -13,6 +20,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +31,8 @@ public class UserController {
 
     @Autowired
     private final UserService userService;
+    private final FriendService friendService;
+    private final ProfileGuestbookService profileGuestbookService;
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
@@ -43,6 +54,37 @@ public class UserController {
         return ApiResponse.success(
             userService.getUserById(getLoginMemberId(session))
         );
+    }
+
+    @GetMapping("/users/search")
+    public ApiResponse<List<UserSearchDto>> searchUsers(@RequestParam(required = false) String keyword) {
+        return ApiResponse.success(userService.searchByNickname(keyword));
+    }
+
+    @GetMapping("/users/{userId}/public-stats")
+    public ApiResponse<PublicStatsDto> getPublicStats(@PathVariable("userId") long userId) {
+        return ApiResponse.success(userService.getPublicStats(userId));
+    }
+
+    @GetMapping("/users/{userId}/friends")
+    public ApiResponse<List<FriendDto>> getFriendsOf(@PathVariable("userId") long userId) {
+        return ApiResponse.success(friendService.getFriendsOf(userId));
+    }
+
+    @GetMapping("/users/{userId}/guestbooks")
+    public ApiResponse<GuestbookPageResponse> getProfileGuestbooks(
+            @PathVariable("userId") long userId,
+            @RequestParam(defaultValue = "0") int page) {
+        return ApiResponse.success(profileGuestbookService.findByOwnerId(userId, page));
+    }
+
+    @PostMapping("/users/{userId}/guestbooks")
+    public ApiResponse<Void> postProfileGuestbook(
+            @PathVariable("userId") long userId,
+            @RequestParam Long writerId,
+            @Valid @RequestBody ProfileGuestbookCreateRequest request) {
+        profileGuestbookService.write(userId, writerId, request);
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/users/check-email/{email}")
