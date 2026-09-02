@@ -1,11 +1,15 @@
 package com.stayworld.back.user.controller;
 
+import com.stayworld.back.friend.dto.FriendDto;
+import com.stayworld.back.friend.service.FriendService;
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
+import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.UserDto;
+import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -13,6 +17,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +28,7 @@ public class UserController {
 
     @Autowired
     private final UserService userService;
+    private final FriendService friendService;
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
@@ -36,6 +43,21 @@ public class UserController {
     @GetMapping("/users/me")
     public ApiResponse<UserDto> getUserDetailsBySession(HttpSession session) {
         return ApiResponse.success(userService.getUserById(getLoginMemberId(session)));
+    }
+
+    @GetMapping("/users/search")
+    public ApiResponse<List<UserSearchDto>> searchUsers(@RequestParam(required = false) String keyword) {
+        return ApiResponse.success(userService.searchByNickname(keyword));
+    }
+
+    @GetMapping("/users/{userId}/public-stats")
+    public ApiResponse<PublicStatsDto> getPublicStats(@PathVariable("userId") long userId) {
+        return ApiResponse.success(userService.getPublicStats(userId));
+    }
+
+    @GetMapping("/users/{userId}/friends")
+    public ApiResponse<List<FriendDto>> getFriendsOf(@PathVariable("userId") long userId) {
+        return ApiResponse.success(friendService.getFriendsOf(userId));
     }
 
     @GetMapping("/users/check-email/{email}")
