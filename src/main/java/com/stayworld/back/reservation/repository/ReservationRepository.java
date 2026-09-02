@@ -39,4 +39,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDate today,
             Pageable pageable
     );
+
+    @Query("SELECT COUNT(DISTINCT r.guesthouse.id) FROM Reservation r WHERE r.userId = :userId AND r.endDate < :today")
+    long countDistinctVisitedGuesthouses(Long userId, LocalDate today);
 }

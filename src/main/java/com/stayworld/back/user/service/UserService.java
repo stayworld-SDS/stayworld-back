@@ -1,10 +1,14 @@
 package com.stayworld.back.user.service;
 
+import com.stayworld.back.friend.repository.FriendRepository;
 import com.stayworld.back.global.exception.UnauthorizedException;
+import com.stayworld.back.reservation.repository.ReservationRepository;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
+import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.UserDto;
+import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.entity.User;
 import com.stayworld.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +16,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final ReservationRepository reservationRepository;
+    private final FriendRepository friendRepository;
 
     @Transactional
     public UserDto createUser(CreateDto dto) {
@@ -65,6 +73,32 @@ public class UserService {
             throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
         }
         userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserSearchDto> searchByNickname(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+
+        return userRepository.findByNicknameContaining(keyword).stream()
+                .map(user -> {
+                    UserSearchDto dto = new UserSearchDto();
+                    dto.setId(user.getId());
+                    dto.setNickname(user.getNickname());
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PublicStatsDto getPublicStats(long userId) {
+        findMemberById(userId);
+
+        PublicStatsDto dto = new PublicStatsDto();
+        dto.setVisitedGuesthouseCount(reservationRepository.countDistinctVisitedGuesthouses(userId, LocalDate.now()));
+        dto.setFriendCount(friendRepository.countByUserId(userId));
+        return dto;
     }
 
     private User findMemberById(long id) {
