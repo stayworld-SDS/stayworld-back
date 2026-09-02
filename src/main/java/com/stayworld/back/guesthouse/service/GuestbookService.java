@@ -12,8 +12,6 @@ import com.stayworld.back.guesthouse.repository.GuestbookRepository;
 import com.stayworld.back.guesthouse.repository.GuesthouseRepository;
 import com.stayworld.back.user.entity.User;
 import com.stayworld.back.user.repository.UserRepository;
-import com.stayworld.back.reservation.entity.Reservation;
-import com.stayworld.back.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -22,9 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +32,6 @@ public class GuestbookService {
     private final GuestbookRepository guestbookRepository;
     private final GuesthouseRepository guesthouseRepository;
     private final UserRepository userRepository;
-    private final ReservationRepository reservationRepository;
 
     @Transactional
     public void saveGuestbook(Long userId, long guesthouseId, GuestbookCreateRequest guestbookCreateRequest){
@@ -44,16 +39,10 @@ public class GuestbookService {
                 .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다."));
         Guesthouse guesthouse = guesthouseRepository.findById(guesthouseId)
                 .orElseThrow(GuesthouseNotFoundException::new);
-        Reservation reservation = reservationRepository.findLatestGuestbookEligibleReservation(
-                        userId, guesthouseId, LocalDate.now(KST), PageRequest.of(0, 1))
-                .stream()
-                .findFirst()
-                .orElseThrow(GuestbookEligibilityException::new);
 
         Guestbook guestbook = new Guestbook();
         guestbook.setGuesthouse(guesthouse);
         guestbook.setUser(user);
-        guestbook.setReservation(reservation);
         guestbook.setBody(guestbookCreateRequest.getBody());
         try {
             guestbookRepository.saveAndFlush(guestbook);

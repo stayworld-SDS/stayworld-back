@@ -19,27 +19,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     /** 유저가 다녀온(체크아웃이 오늘 이전) 예약 목록, 최근 순. */
     List<Reservation> findByUserIdAndEndDateLessThanOrderByStartDateDesc(Long userId, LocalDate today);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-        SELECT r
-        FROM Reservation r
-        WHERE r.userId = :userId
-            AND r.guesthouse.id = :guesthouseId
-            AND r.endDate <= :today
-            AND NOT EXISTS (
-                SELECT gb
-                FROM Guestbook gb
-                WHERE gb.reservation = r
-            )
-        ORDER BY r.endDate DESC, r.id DESC
-    """)
-    List<Reservation> findLatestGuestbookEligibleReservation(
-            Long userId,
-            Long guesthouseId,
-            LocalDate today,
-            Pageable pageable
-    );
-
     @Query("SELECT COUNT(DISTINCT r.guesthouse.id) FROM Reservation r WHERE r.userId = :userId AND r.endDate < :today")
     long countDistinctVisitedGuesthouses(Long userId, LocalDate today);
 }
