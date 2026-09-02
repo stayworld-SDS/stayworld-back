@@ -6,23 +6,24 @@ import com.stayworld.back.reservation.repository.ReservationRepository;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
+import com.stayworld.back.user.dto.ProfilePictureDto;
 import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.entity.User;
 import com.stayworld.back.user.repository.UserRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
@@ -81,14 +82,16 @@ public class UserService {
             return List.of();
         }
 
-        return userRepository.findByNicknameContaining(keyword).stream()
-                .map(user -> {
-                    UserSearchDto dto = new UserSearchDto();
-                    dto.setId(user.getId());
-                    dto.setNickname(user.getNickname());
-                    return dto;
-                })
-                .toList();
+        return userRepository
+            .findByNicknameContaining(keyword)
+            .stream()
+            .map(user -> {
+                UserSearchDto dto = new UserSearchDto();
+                dto.setId(user.getId());
+                dto.setNickname(user.getNickname());
+                return dto;
+            })
+            .toList();
     }
 
     @Transactional(readOnly = true)
@@ -96,14 +99,22 @@ public class UserService {
         findMemberById(userId);
 
         PublicStatsDto dto = new PublicStatsDto();
-        dto.setVisitedGuesthouseCount(reservationRepository.countDistinctVisitedGuesthouses(userId, LocalDate.now()));
+        dto.setVisitedGuesthouseCount(
+            reservationRepository.countDistinctVisitedGuesthouses(
+                userId,
+                LocalDate.now()
+            )
+        );
         dto.setFriendCount(friendRepository.countByUserId(userId));
         return dto;
     }
 
     private User findMemberById(long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        return userRepository
+            .findById(id)
+            .orElseThrow(() ->
+                new IllegalArgumentException("존재하지 않는 회원입니다.")
+            );
     }
 
     private UserDto toDto(User user) {
@@ -115,6 +126,18 @@ public class UserService {
         dto.setBalance(user.getBalance());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setVisitorCount(user.getVisitorCount());
+        dto.setProfilePictureId(user.getProfilePictureId());
         return dto;
+    }
+
+    public ProfilePictureDto getProfilePictureId(long userId) {
+        User user = findMemberById(userId);
+        return new ProfilePictureDto(user.getProfilePictureId());
+    }
+
+    public void modifyProfilePictureId(long userId, int profilePictureId) {
+        User user = findMemberById(userId);
+        user.setProfilePictureId(profilePictureId);
+        userRepository.save(user);
     }
 }
