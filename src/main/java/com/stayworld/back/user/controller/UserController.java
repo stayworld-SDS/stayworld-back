@@ -13,11 +13,14 @@ import com.stayworld.back.profile.service.ProfileVisitService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
+import com.stayworld.back.user.dto.ProfileMusicAddRequest;
+import com.stayworld.back.user.dto.ProfileMusicDto;
 import com.stayworld.back.user.dto.ProfilePictureDto;
 import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.PublicUserDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.dto.UserSearchDto;
+import com.stayworld.back.user.service.ProfileMusicService;
 import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -39,6 +42,7 @@ public class UserController {
     private final FriendService friendService;
     private final ProfileGuestbookService profileGuestbookService;
     private final ProfileVisitService profileVisitService;
+    private final ProfileMusicService profileMusicService;
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
@@ -132,6 +136,23 @@ public class UserController {
     ) {
         profileGuestbookService.write(userId, writerId, request);
         return ApiResponse.success(null);
+    }
+
+    @GetMapping("/users/{userId}/musics")
+    public ApiResponse<List<ProfileMusicDto>> getProfileMusics(
+        @PathVariable("userId") long userId
+    ) {
+        return ApiResponse.success(profileMusicService.getPlaylist(userId));
+    }
+
+    @PostMapping("/users/me/musics")
+    public ApiResponse<ProfileMusicDto> addProfileMusic(
+        @Valid @RequestBody ProfileMusicAddRequest request,
+        HttpSession session
+    ) {
+        return ApiResponse.success(
+            profileMusicService.addToPlaylist(getLoginMemberId(session), request)
+        );
     }
 
     @GetMapping("/users/check-email/{email}")

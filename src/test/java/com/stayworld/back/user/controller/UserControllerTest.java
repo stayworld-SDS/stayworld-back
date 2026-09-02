@@ -16,6 +16,7 @@ import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.repository.UserRepository;
+import com.stayworld.back.user.service.ProfileMusicService;
 import com.stayworld.back.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ class UserControllerTest {
 
     @MockitoBean
     ProfileVisitService profileVisitService;
+
+    @MockitoBean
+    ProfileMusicService profileMusicService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
