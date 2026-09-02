@@ -4,6 +4,9 @@ import com.stayworld.back.friend.dto.FriendDto;
 import com.stayworld.back.friend.service.FriendService;
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
+import com.stayworld.back.guesthouse.dto.GuestbookPageResponse;
+import com.stayworld.back.profile.dto.ProfileGuestbookCreateRequest;
+import com.stayworld.back.profile.service.ProfileGuestbookService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
@@ -29,6 +32,7 @@ public class UserController {
     @Autowired
     private final UserService userService;
     private final FriendService friendService;
+    private final ProfileGuestbookService profileGuestbookService;
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
@@ -58,6 +62,22 @@ public class UserController {
     @GetMapping("/users/{userId}/friends")
     public ApiResponse<List<FriendDto>> getFriendsOf(@PathVariable("userId") long userId) {
         return ApiResponse.success(friendService.getFriendsOf(userId));
+    }
+
+    @GetMapping("/users/{userId}/guestbooks")
+    public ApiResponse<GuestbookPageResponse> getProfileGuestbooks(
+            @PathVariable("userId") long userId,
+            @RequestParam(defaultValue = "0") int page) {
+        return ApiResponse.success(profileGuestbookService.findByOwnerId(userId, page));
+    }
+
+    @PostMapping("/users/{userId}/guestbooks")
+    public ApiResponse<Void> postProfileGuestbook(
+            @PathVariable("userId") long userId,
+            @RequestParam Long writerId,
+            @Valid @RequestBody ProfileGuestbookCreateRequest request) {
+        profileGuestbookService.write(userId, writerId, request);
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/users/check-email/{email}")
