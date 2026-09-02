@@ -36,17 +36,24 @@ public class UserController {
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
-        return ApiResponse.success("유저 생성에 성공하였습니다.", userService.createUser(dto));
+        return ApiResponse.success(
+            "유저 생성에 성공하였습니다.",
+            userService.createUser(dto)
+        );
     }
 
     @GetMapping("/users/{userId}")
-    public ApiResponse<UserDto> getUserDetailsById(@PathVariable("userId") long userId) {
+    public ApiResponse<UserDto> getUserDetailsById(
+        @PathVariable("userId") long userId
+    ) {
         return ApiResponse.success(userService.getUserById(userId));
     }
 
     @GetMapping("/users/me")
     public ApiResponse<UserDto> getUserDetailsBySession(HttpSession session) {
-        return ApiResponse.success(userService.getUserById(getLoginMemberId(session)));
+        return ApiResponse.success(
+            userService.getUserById(getLoginMemberId(session))
+        );
     }
 
     @GetMapping("/users/search")
@@ -82,23 +89,32 @@ public class UserController {
 
     @GetMapping("/users/check-email/{email}")
     public ApiResponse<Boolean> checkEmailOccupancy(
-            @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$")
-            @PathVariable("email") String email) {
+        @Pattern(
+            regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        ) @PathVariable("email") String email
+    ) {
         return ApiResponse.success(userService.checkEmailOccupancy(email));
     }
 
     @PatchMapping("/users/me")
-    public ApiResponse<UserDto> modifyUserDetails(@RequestBody ModifyDto dto, HttpSession session) {
-        return ApiResponse.success(userService.modifyUserDetails(getLoginMemberId(session), dto));
+    public ApiResponse<UserDto> modifyUserDetails(
+        @RequestBody ModifyDto dto,
+        HttpSession session
+    ) {
+        return ApiResponse.success(
+            userService.modifyUserDetails(getLoginMemberId(session), dto)
+        );
     }
 
     @DeleteMapping("/users/me")
-    public ApiResponse<Void> deleteUser(@RequestBody DeleteDto dto, HttpSession session) {
+    public ApiResponse<Void> deleteUser(
+        @RequestBody DeleteDto dto,
+        HttpSession session
+    ) {
         userService.deleteUser(getLoginMemberId(session), dto);
         session.invalidate();
         return ApiResponse.success("회원 탈퇴가 완료되었습니다.", null);
     }
-
 
     private long getLoginMemberId(HttpSession session) {
         Object memberId = session.getAttribute(SESSION_MEMBER_ID);
