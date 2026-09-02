@@ -1,5 +1,6 @@
 package com.stayworld.back.friend.controller;
 
+import com.stayworld.back.friend.dto.DegreeResponse;
 import com.stayworld.back.friend.dto.FriendAddRequest;
 import com.stayworld.back.friend.dto.FriendDto;
 import com.stayworld.back.friend.service.FriendService;
@@ -22,6 +23,14 @@ public class FriendController {
     @GetMapping
     public ApiResponse<List<FriendDto>> getMyFriends(@LoginMember Long userId) {
         return ApiResponse.success(friendService.getMyFriends(userId));
+    }
+
+    // 나 ↔ targetUserId 촌수(최단거리)와 경로. 6촌 내 도달 불가면 reachable=false.
+    @GetMapping("/degree")
+    public ApiResponse<DegreeResponse> getDegree(
+            @LoginMember Long userId,
+            @RequestParam Long targetUserId) {
+        return ApiResponse.success(friendService.getDegree(userId, targetUserId));
     }
 
     @PostMapping

@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -16,7 +17,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "friends", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "friend_id"}))
+@Table(
+        name = "friends",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "friend_id"}),
+        // (user_id, friend_id) 유니크 인덱스가 user_id 선두 조회는 커버한다.
+        // friend_id 단독(반대 방향 BFS 확장)만 별도 인덱스 필요.
+        indexes = @Index(name = "idx_friend_friend_id", columnList = "friend_id")
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Friend {
