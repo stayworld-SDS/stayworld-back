@@ -17,11 +17,10 @@ import com.stayworld.back.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class UserController {
 
     @Autowired
     private final UserService userService;
+
     private final FriendService friendService;
     private final ProfileGuestbookService profileGuestbookService;
 
@@ -57,32 +57,42 @@ public class UserController {
     }
 
     @GetMapping("/users/search")
-    public ApiResponse<List<UserSearchDto>> searchUsers(@RequestParam(required = false) String keyword) {
+    public ApiResponse<List<UserSearchDto>> searchUsers(
+        @RequestParam(required = false) String keyword
+    ) {
         return ApiResponse.success(userService.searchByNickname(keyword));
     }
 
     @GetMapping("/users/{userId}/public-stats")
-    public ApiResponse<PublicStatsDto> getPublicStats(@PathVariable("userId") long userId) {
+    public ApiResponse<PublicStatsDto> getPublicStats(
+        @PathVariable("userId") long userId
+    ) {
         return ApiResponse.success(userService.getPublicStats(userId));
     }
 
     @GetMapping("/users/{userId}/friends")
-    public ApiResponse<List<FriendDto>> getFriendsOf(@PathVariable("userId") long userId) {
+    public ApiResponse<List<FriendDto>> getFriendsOf(
+        @PathVariable("userId") long userId
+    ) {
         return ApiResponse.success(friendService.getFriendsOf(userId));
     }
 
     @GetMapping("/users/{userId}/guestbooks")
     public ApiResponse<GuestbookPageResponse> getProfileGuestbooks(
-            @PathVariable("userId") long userId,
-            @RequestParam(defaultValue = "0") int page) {
-        return ApiResponse.success(profileGuestbookService.findByOwnerId(userId, page));
+        @PathVariable("userId") long userId,
+        @RequestParam(defaultValue = "0") int page
+    ) {
+        return ApiResponse.success(
+            profileGuestbookService.findByOwnerId(userId, page)
+        );
     }
 
     @PostMapping("/users/{userId}/guestbooks")
     public ApiResponse<Void> postProfileGuestbook(
-            @PathVariable("userId") long userId,
-            @RequestParam Long writerId,
-            @Valid @RequestBody ProfileGuestbookCreateRequest request) {
+        @PathVariable("userId") long userId,
+        @RequestParam Long writerId,
+        @Valid @RequestBody ProfileGuestbookCreateRequest request
+    ) {
         profileGuestbookService.write(userId, writerId, request);
         return ApiResponse.success(null);
     }

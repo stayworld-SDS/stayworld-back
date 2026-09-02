@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.stayworld.back.friend.service.FriendService;
+import com.stayworld.back.profile.service.ProfileGuestbookService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
@@ -22,28 +24,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-/*
-테스트해야 할 시나리오
-
-- POST /users
-    - 서비스 레이어에서 IllegalArgumentException 던졌을 때 400 반환
-    - 유효하지 않은 이메일/전화번호 형식으로 유저 생성시 400
-
-- GET /users/{userId}
-
-- GET /users/me
-    - 세션 값이 존재하지 않는 상태에서 요청 시 실패
-
-- GET /users/check-email/{email}
-    - 서비스 레이어에서 존재하는 이메일으로 판정된 경우 정상적으로 성공, true 반환
-
-- PATCH /users/me
-    - 세션 값이 존재하지 않는 상태에서 요청 시 실패
-
-- DELETE /users/me
-    - 세션 값이 존재하지 않는 상태에서 요청 시 실패
-*/
-
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
@@ -55,6 +35,12 @@ class UserControllerTest {
 
     @MockitoBean
     UserRepository userRepository;
+
+    @MockitoBean
+    FriendService friendService;
+
+    @MockitoBean
+    ProfileGuestbookService profileGuestbookService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
