@@ -69,7 +69,7 @@ public class ReservationService {
         validateHeadcount(req.getHeadcount(), req.getStartDate(), req.getEndDate(), guesthouse);
 
         long nights = ChronoUnit.DAYS.between(req.getStartDate(), req.getEndDate());
-        int cost = guesthouse.getPrice() * (int) nights;
+        int cost = guesthouse.getPrice() * (int) nights * req.getHeadcount();
 
         // 잔액 부족이면 InsufficientAcornException(400) → 트랜잭션 롤백, 예약 통째로 실패
         acornLedger.spend(userId, cost, REASON_PAYMENT);
