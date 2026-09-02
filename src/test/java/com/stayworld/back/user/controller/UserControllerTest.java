@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.stayworld.back.friend.service.FriendService;
 import com.stayworld.back.profile.service.ProfileGuestbookService;
+import com.stayworld.back.profile.service.ProfileVisitService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
@@ -41,6 +42,9 @@ class UserControllerTest {
 
     @MockitoBean
     ProfileGuestbookService profileGuestbookService;
+
+    @MockitoBean
+    ProfileVisitService profileVisitService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

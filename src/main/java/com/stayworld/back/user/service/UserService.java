@@ -7,6 +7,7 @@ import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.PublicStatsDto;
+import com.stayworld.back.user.dto.PublicUserDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.entity.User;
@@ -51,6 +52,18 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDto getUserById(long id) {
         return toDto(findMemberById(id));
+    }
+
+    /** 타인에게 보여줄 공개 프로필 (민감 정보 제외). */
+    @Transactional(readOnly = true)
+    public PublicUserDto getPublicProfile(long id) {
+        User user = findMemberById(id);
+        PublicUserDto dto = new PublicUserDto();
+        dto.setUserId(user.getId());
+        dto.setNickname(user.getNickname());
+        dto.setVisitorCount(user.getVisitorCount());
+        dto.setMemberSince(user.getCreatedAt());
+        return dto;
     }
 
     @Transactional(readOnly = true)

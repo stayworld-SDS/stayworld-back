@@ -11,7 +11,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "reservations", indexes = {
+        @Index(name = "idx_reservation_user_end", columnList = "user_id, end_date"),
+        @Index(name = "idx_reservation_guesthouse_end", columnList = "guesthouse_id, end_date")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation {

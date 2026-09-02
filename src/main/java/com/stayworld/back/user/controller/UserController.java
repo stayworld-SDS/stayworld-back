@@ -5,12 +5,16 @@ import com.stayworld.back.friend.service.FriendService;
 import com.stayworld.back.global.exception.UnauthorizedException;
 import com.stayworld.back.global.response.ApiResponse;
 import com.stayworld.back.guesthouse.dto.GuestbookPageResponse;
+import com.stayworld.back.profile.dto.FootprintDto;
 import com.stayworld.back.profile.dto.ProfileGuestbookCreateRequest;
+import com.stayworld.back.profile.dto.VisitResponse;
 import com.stayworld.back.profile.service.ProfileGuestbookService;
+import com.stayworld.back.profile.service.ProfileVisitService;
 import com.stayworld.back.user.dto.CreateDto;
 import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.PublicStatsDto;
+import com.stayworld.back.user.dto.PublicUserDto;
 import com.stayworld.back.user.dto.UserDto;
 import com.stayworld.back.user.dto.UserSearchDto;
 import com.stayworld.back.user.service.UserService;
@@ -33,6 +37,7 @@ public class UserController {
 
     private final FriendService friendService;
     private final ProfileGuestbookService profileGuestbookService;
+    private final ProfileVisitService profileVisitService;
 
     @PostMapping("/users")
     public ApiResponse<UserDto> createUser(@Valid @RequestBody CreateDto dto) {
@@ -42,11 +47,12 @@ public class UserController {
         );
     }
 
+    // 타인의 미니홈피 프로필 (공개 정보만). 본인 전체 정보는 GET /users/me.
     @GetMapping("/users/{userId}")
-    public ApiResponse<UserDto> getUserDetailsById(
+    public ApiResponse<PublicUserDto> getUserDetailsById(
         @PathVariable("userId") long userId
     ) {
-        return ApiResponse.success(userService.getUserById(userId));
+        return ApiResponse.success(userService.getPublicProfile(userId));
     }
 
     @GetMapping("/users/me")
@@ -75,6 +81,20 @@ public class UserController {
         @PathVariable("userId") long userId
     ) {
         return ApiResponse.success(friendService.getFriendsOf(userId));
+    }
+
+    // 미니홈피 진입 시 호출. 본인/오늘 재방문이면 투데이는 안 오르고 counted=false.
+    @PostMapping("/users/{userId}/visits")
+    public ApiResponse<VisitResponse> recordVisit(
+            @PathVariable("userId") long userId,
+            HttpSession session) {
+        return ApiResponse.success(profileVisitService.recordVisit(userId, getLoginMemberId(session)));
+    }
+
+    // 미니홈피에 남은 발자국 (방문자별 최근 방문, 최대 20개).
+    @GetMapping("/users/{userId}/footprints")
+    public ApiResponse<List<FootprintDto>> getFootprints(@PathVariable("userId") long userId) {
+        return ApiResponse.success(profileVisitService.footprints(userId));
     }
 
     @GetMapping("/users/{userId}/guestbooks")
