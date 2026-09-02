@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name="guestbooks")
 public class Guestbook {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,9 +26,9 @@ public class Guestbook {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guesthouse_id", nullable = false)
     private Guesthouse guesthouse;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
-    private Reservation reservation;
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
+//    private Reservation reservation;
     @Column(length = 500, nullable = false)
     String body;
     @Column(nullable = false)
