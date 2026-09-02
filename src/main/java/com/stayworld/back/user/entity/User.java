@@ -40,4 +40,7 @@ public class User {
 
     @Column(name = "visitor_count", nullable = false)
     int visitorCount;
+
+    @Column(name = "profile_picture_id", nullable = false)
+    int profilePictureId = 0;
 }
