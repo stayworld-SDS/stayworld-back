@@ -1,11 +1,11 @@
 package com.stayworld.back.user.dto;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 public class UserDto {
+
     long id;
     String email;
     String nickname;
@@ -13,4 +13,5 @@ public class UserDto {
     int balance;
     LocalDateTime createdAt;
     int visitorCount;
+    int profilePictureId;
 }
