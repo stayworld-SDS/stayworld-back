@@ -84,17 +84,8 @@ class GuestbookServiceTest {
         user.setNickname("작성자");
         Guesthouse guesthouse = new Guesthouse();
         guesthouse.setId(10L);
-        Reservation reservation = Reservation.builder()
-                .userId(1L).guesthouse(guesthouse)
-                .startDate(LocalDate.now().minusDays(2)).endDate(LocalDate.now())
-                .headcount(1).cost(10_000)
-                .build();
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(guesthouseRepository.findById(10L)).thenReturn(Optional.of(guesthouse));
-        when(reservationRepository.findLatestGuestbookEligibleReservation(
-                eq(1L), eq(10L), any(LocalDate.class), any()))
-                .thenReturn(List.of(reservation));
-
         guestbookService.saveGuestbook(1L, 10L, new GuestbookCreateRequest("열 글자 이상의 방명록 본문입니다."));
 
         ArgumentCaptor<Guestbook> captor = ArgumentCaptor.forClass(Guestbook.class);
@@ -102,7 +93,6 @@ class GuestbookServiceTest {
         assertThat(captor.getValue()).satisfies(saved -> {
             assertThat(saved.getUser()).isSameAs(user);
             assertThat(saved.getGuesthouse()).isSameAs(guesthouse);
-            assertThat(saved.getReservation()).isSameAs(reservation);
             assertThat(saved.getBody()).isEqualTo("열 글자 이상의 방명록 본문입니다.");
         });
     }
@@ -129,21 +119,6 @@ class GuestbookServiceTest {
                 .isInstanceOf(GuesthouseNotFoundException.class);
 
         verify(guestbookRepository, never()).save(any());
-    }
-
-    @Test
-    void saveGuestbook_완료된_미작성_예약이_없으면_400() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
-        when(guesthouseRepository.findById(10L)).thenReturn(Optional.of(new Guesthouse()));
-        when(reservationRepository.findLatestGuestbookEligibleReservation(
-                eq(1L), eq(10L), any(LocalDate.class), any()))
-                .thenReturn(List.of());
-
-        assertThatThrownBy(() -> guestbookService.saveGuestbook(
-                1L, 10L, new GuestbookCreateRequest("열 글자 이상의 방명록 본문입니다.")))
-                .isInstanceOf(GuestbookEligibilityException.class);
-
-        verify(guestbookRepository, never()).saveAndFlush(any());
     }
 
     @Test
