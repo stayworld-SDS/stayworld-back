@@ -153,7 +153,7 @@ class ReservationServiceTest {
 
         assertThat(id).isEqualTo(50L);
 
-        verify(acornLedger).spend(1L, 30_000, "RESERVATION");   // 10,000 * 3박
+        verify(acornLedger).spend(1L, 60_000, "RESERVATION");   // 10,000 * 2명 * 3박
         verify(dailyOccupancyRepository).increaseOccupancy(100L, IN, OUT, 2);
 
         ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
@@ -162,14 +162,14 @@ class ReservationServiceTest {
         assertThat(saved.getUserId()).isEqualTo(1L);
         assertThat(saved.getGuesthouse().getId()).isEqualTo(100L);
         assertThat(saved.getHeadcount()).isEqualTo(2);
-        assertThat(saved.getCost()).isEqualTo(30_000);   // 10,000 * 3박
+        assertThat(saved.getCost()).isEqualTo(60_000);   // 10,000 * 2명 * 3박
     }
 
     @Test
     void create_도토리_잔액이_부족하면_400이고_예약을_저장하지_않는다() {
         when(guesthouseRepository.findById(100L)).thenReturn(Optional.of(guesthouse(100L, 10_000, 4)));
-        when(acornLedger.spend(1L, 30_000, "RESERVATION"))
-                .thenThrow(new InsufficientAcornException(10_000, 30_000));
+        when(acornLedger.spend(1L, 60_000, "RESERVATION"))
+                .thenThrow(new InsufficientAcornException(10_000, 60_000));
 
         assertThatThrownBy(() -> reservationService.create(1L, request(100L, IN, OUT, 2)))
                 .isInstanceOf(InsufficientAcornException.class);
@@ -216,7 +216,7 @@ class ReservationServiceTest {
         Long id = reservationService.create(1L, request(100L, IN, OUT, 2));
 
         assertThat(id).isEqualTo(50L);
-        verify(acornLedger).spend(1L, 30_000, "RESERVATION");
+        verify(acornLedger).spend(1L, 60_000, "RESERVATION");
         verify(dailyOccupancyRepository).increaseOccupancy(100L, IN, OUT, 2);
     }
 
@@ -248,7 +248,7 @@ class ReservationServiceTest {
         Long id = reservationService.create(1L, request(100L, IN, OUT, 2));
 
         assertThat(id).isEqualTo(50L);
-        verify(acornLedger).spend(1L, 30_000, "RESERVATION");
+        verify(acornLedger).spend(1L, 60_000, "RESERVATION");
         verify(dailyOccupancyRepository).increaseOccupancy(100L, IN, OUT, 2);
     }
 
