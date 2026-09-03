@@ -16,8 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:3000",
                         "http://localhost:5173",
-                        "https://stayworld-front.vercel.app",
-                        "http://192.168.50.88:3000"
+                        "https://stayworld-front.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
