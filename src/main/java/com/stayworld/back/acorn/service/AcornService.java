@@ -1,5 +1,6 @@
 package com.stayworld.back.acorn.service;
 
+import com.stayworld.back.acorn.dto.AcornChargeResponse;
 import com.stayworld.back.acorn.dto.AcornHistoryResponse;
 import com.stayworld.back.acorn.dto.AcornMeResponse;
 import com.stayworld.back.acorn.dto.GamePlayResponse;
@@ -28,6 +29,7 @@ public class AcornService {
     private static final int ENTRY_FEE = 100;
     private static final String REASON_ENTRY = "GAME_ENTRY";
     private static final String REASON_WIN = "GAME_WIN";
+    private static final String REASON_CHARGE = "CHARGE";
 
     /** 하루 참여 제한. */
     public static final int DAILY_PLAY_LIMIT = 10;
@@ -62,6 +64,24 @@ public class AcornService {
         }
 
         return new GamePlayResponse(balance);
+    }
+
+    /**
+     * 도토리 충전/차감. 프론트가 넘긴 부호 있는 {@code amount} 를 그대로 반영한다.
+     * 양수면 지급, 음수면 차감(잔액 부족 시 {@link com.stayworld.back.acorn.exception.InsufficientAcornException}).
+     * 게임의 하루 참여 제한·참여비와는 무관하다.
+     *
+     * @param amount 0 이 아닌 부호 있는 증감량
+     */
+    @Transactional
+    public AcornChargeResponse charge(Long userId, int amount) {
+        if (amount == 0) {
+            throw new IllegalArgumentException("충전량은 0일 수 없습니다.");
+        }
+        int balance = amount > 0
+                ? acornLedger.earn(userId, amount, REASON_CHARGE)
+                : acornLedger.spend(userId, -amount, REASON_CHARGE);
+        return new AcornChargeResponse(balance);
     }
 
     public AcornHistoryResponse history(Long userId, Pageable pageable) {

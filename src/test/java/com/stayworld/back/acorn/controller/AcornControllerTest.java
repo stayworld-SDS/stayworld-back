@@ -1,6 +1,8 @@
 package com.stayworld.back.acorn.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stayworld.back.acorn.dto.AcornChargeRequest;
+import com.stayworld.back.acorn.dto.AcornChargeResponse;
 import com.stayworld.back.acorn.dto.AcornHistoryResponse;
 import com.stayworld.back.acorn.dto.AcornMeResponse;
 import com.stayworld.back.acorn.dto.GamePlayRequest;
@@ -106,6 +108,44 @@ class AcornControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("오늘 게임 참여 횟수(10회)를 모두 사용했습니다."))
                 .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    // ---- POST /acorns/charge ----
+
+    @Test
+    void charge_세션없으면_401() throws Exception {
+        mockMvc.perform(post("/acorns/charge")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AcornChargeRequest(500))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void charge_정상이면_반영후_잔액을_반환한다() throws Exception {
+        when(acornService.charge(1L, -300)).thenReturn(new AcornChargeResponse(9_700));
+
+        mockMvc.perform(post("/acorns/charge")
+                        .session(loginSession(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AcornChargeRequest(-300))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.acorns").value(9_700));
+    }
+
+    @Test
+    void charge_0이면_400() throws Exception {
+        when(acornService.charge(1L, 0))
+                .thenThrow(new IllegalArgumentException("충전량은 0일 수 없습니다."));
+
+        mockMvc.perform(post("/acorns/charge")
+                        .session(loginSession(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AcornChargeRequest(0))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("충전량은 0일 수 없습니다."));
     }
 
     // ---- GET /acorns/history ----
