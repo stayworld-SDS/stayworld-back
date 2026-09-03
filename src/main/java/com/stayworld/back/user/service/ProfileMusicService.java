@@ -27,25 +27,44 @@ public class ProfileMusicService {
             throw new NotFoundException("존재하지 않는 회원입니다.");
         }
 
-        return profileMusicRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                .map(ProfileMusicDto::from)
-                .toList();
+        return profileMusicRepository
+            .findByUserIdOrderByCreatedAtDesc(userId)
+            .stream()
+            .map(ProfileMusicDto::from)
+            .toList();
     }
 
     @Transactional
-    public ProfileMusicDto addToPlaylist(Long userId, ProfileMusicAddRequest request) {
+    public ProfileMusicDto addToPlaylist(
+        Long userId,
+        ProfileMusicAddRequest request
+    ) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("존재하지 않는 회원입니다.");
         }
 
-        Music music = musicRepository.findById(request.getMusicId())
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 음악입니다."));
+        Music music = musicRepository
+            .findById(request.getMusicId())
+            .orElseThrow(() ->
+                new NotFoundException("존재하지 않는 음악입니다.")
+            );
 
         ProfileMusic profileMusic = ProfileMusic.builder()
-                .userId(userId)
-                .music(music)
-                .build();
+            .userId(userId)
+            .music(music)
+            .build();
 
         return ProfileMusicDto.from(profileMusicRepository.save(profileMusic));
+    }
+
+    @Transactional
+    public void deleteProfileMusic(long userId, long musicId) {
+        ProfileMusic profileMusic = profileMusicRepository
+            .findByUserIdAndMusicId(userId, musicId)
+            .orElseThrow(() ->
+                new NotFoundException("해당 음악이 존재하지 않습니다.")
+            );
+
+        profileMusicRepository.delete(profileMusic);
     }
 }
