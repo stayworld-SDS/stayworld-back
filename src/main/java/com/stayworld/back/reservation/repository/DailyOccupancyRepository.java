@@ -32,7 +32,10 @@ public interface DailyOccupancyRepository extends JpaRepository<DailyOccupancy, 
         SELECT g
         FROM Guesthouse g
         WHERE g.capacity >= :headcount
-            AND g.address LIKE CONCAT('%', :location, '%') ESCAPE '\\'
+            AND (
+                g.address LIKE CONCAT('%', :location, '%') ESCAPE '\\'
+                OR g.name LIKE CONCAT('%', :location, '%') ESCAPE '\\'
+            )
             AND NOT EXISTS (
             SELECT o
             FROM DailyOccupancy o
