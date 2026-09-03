@@ -90,14 +90,19 @@ public class UserController {
     // 미니홈피 진입 시 호출. 본인/오늘 재방문이면 투데이는 안 오르고 counted=false.
     @PostMapping("/users/{userId}/visits")
     public ApiResponse<VisitResponse> recordVisit(
-            @PathVariable("userId") long userId,
-            HttpSession session) {
-        return ApiResponse.success(profileVisitService.recordVisit(userId, getLoginMemberId(session)));
+        @PathVariable("userId") long userId,
+        HttpSession session
+    ) {
+        return ApiResponse.success(
+            profileVisitService.recordVisit(userId, getLoginMemberId(session))
+        );
     }
 
     // 미니홈피에 남은 발자국 (방문자별 최근 방문, 최대 20개).
     @GetMapping("/users/{userId}/footprints")
-    public ApiResponse<List<FootprintDto>> getFootprints(@PathVariable("userId") long userId) {
+    public ApiResponse<List<FootprintDto>> getFootprints(
+        @PathVariable("userId") long userId
+    ) {
         return ApiResponse.success(profileVisitService.footprints(userId));
     }
 
@@ -128,13 +133,32 @@ public class UserController {
         return ApiResponse.success(profileMusicService.getPlaylist(userId));
     }
 
+    @DeleteMapping("/users/{userId}/musics")
+    public ApiResponse<Void> deleteProfileMusic(
+        HttpSession session,
+        @PathVariable("userId") long userId,
+        @RequestParam("musicId") long musicId
+    ) {
+        long sessionUserId = getLoginMemberId(session);
+
+        if (sessionUserId != userId) {
+            throw new UnauthorizedException("인증되지 않았습니다.");
+        }
+
+        profileMusicService.deleteProfileMusic(userId, musicId);
+        return ApiResponse.success(null);
+    }
+
     @PostMapping("/users/me/musics")
     public ApiResponse<ProfileMusicDto> addProfileMusic(
         @Valid @RequestBody ProfileMusicAddRequest request,
         HttpSession session
     ) {
         return ApiResponse.success(
-            profileMusicService.addToPlaylist(getLoginMemberId(session), request)
+            profileMusicService.addToPlaylist(
+                getLoginMemberId(session),
+                request
+            )
         );
     }
 
