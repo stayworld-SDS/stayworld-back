@@ -84,6 +84,37 @@ class AcornServiceTest {
     }
 
     @Test
+    void charge_양수면_지급하고_반영후_잔액을_반환한다() {
+        when(acornLedger.earn(1L, 500, "CHARGE")).thenReturn(10_500);
+
+        var res = acornService.charge(1L, 500);
+
+        assertThat(res.getAcorns()).isEqualTo(10_500);
+        verify(acornLedger).earn(1L, 500, "CHARGE");
+        verify(acornLedger, never()).spend(any(), anyInt(), any());
+    }
+
+    @Test
+    void charge_음수면_절댓값만큼_차감한다() {
+        when(acornLedger.spend(1L, 300, "CHARGE")).thenReturn(9_700);
+
+        var res = acornService.charge(1L, -300);
+
+        assertThat(res.getAcorns()).isEqualTo(9_700);
+        verify(acornLedger).spend(1L, 300, "CHARGE");
+        verify(acornLedger, never()).earn(any(), anyInt(), any());
+    }
+
+    @Test
+    void charge_0이면_400이고_원장을_건드리지_않는다() {
+        assertThatThrownBy(() -> acornService.charge(1L, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("0");
+
+        verifyNoInteractions(acornLedger);
+    }
+
+    @Test
     void me_현재_잔액과_오늘_참여횟수_상한을_반환한다() {
         User user = new User();
         user.setBalance(120);

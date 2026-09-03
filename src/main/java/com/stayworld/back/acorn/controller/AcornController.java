@@ -1,5 +1,7 @@
 package com.stayworld.back.acorn.controller;
 
+import com.stayworld.back.acorn.dto.AcornChargeRequest;
+import com.stayworld.back.acorn.dto.AcornChargeResponse;
 import com.stayworld.back.acorn.dto.AcornHistoryResponse;
 import com.stayworld.back.acorn.dto.AcornMeResponse;
 import com.stayworld.back.acorn.dto.GamePlayRequest;
@@ -28,6 +30,13 @@ public class AcornController {
     public ApiResponse<GamePlayResponse> playGame(@LoginMember Long userId,
                                                    @Valid @RequestBody GamePlayRequest request) {
         return ApiResponse.success(acornService.play(userId, request.getWinAmount()));
+    }
+
+    // 도토리 충전/차감. 프론트가 넘긴 숫자를 그대로 증감 (양수=충전, 음수=차감, 0 불가)
+    @PostMapping("/acorns/charge")
+    public ApiResponse<AcornChargeResponse> charge(@LoginMember Long userId,
+                                                   @Valid @RequestBody AcornChargeRequest request) {
+        return ApiResponse.success(acornService.charge(userId, request.getAmount()));
     }
 
     // 도토리 사용/습득 내역 조회 (페이지네이션). ?page=0&size=20&sort=id,desc
