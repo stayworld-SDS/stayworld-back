@@ -15,6 +15,7 @@ import com.stayworld.back.user.dto.DeleteDto;
 import com.stayworld.back.user.dto.ModifyDto;
 import com.stayworld.back.user.dto.ProfileMusicAddRequest;
 import com.stayworld.back.user.dto.ProfileMusicDto;
+import com.stayworld.back.user.dto.ProfilePictureDto;
 import com.stayworld.back.user.dto.PublicStatsDto;
 import com.stayworld.back.user.dto.PublicUserDto;
 import com.stayworld.back.user.dto.UserDto;
@@ -78,6 +79,22 @@ public class UserController {
         @PathVariable("userId") long userId
     ) {
         return ApiResponse.success(userService.getPublicStats(userId));
+    }
+
+    @GetMapping("/users/{userId}/profile-picture")
+    public ApiResponse<ProfilePictureDto> getProfilePictureId(
+        @PathVariable("userId") long userId
+    ) {
+        return ApiResponse.success(userService.getProfilePictureId(userId));
+    }
+
+    @PatchMapping("/users/{userId}/profile-picture")
+    public ApiResponse<Void> modifyProfilePictureId(
+        @PathVariable("userId") long userId,
+        @RequestBody ProfilePictureDto dto
+    ) {
+        userService.modifyProfilePictureId(userId, dto.getProfilePictureId());
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/users/{userId}/friends")
