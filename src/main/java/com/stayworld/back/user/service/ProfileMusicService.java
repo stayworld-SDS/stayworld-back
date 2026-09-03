@@ -59,12 +59,13 @@ public class ProfileMusicService {
 
     @Transactional
     public void deleteProfileMusic(long userId, long musicId) {
-        ProfileMusic profileMusic = profileMusicRepository
-            .findByUserIdAndMusicId(userId, musicId)
-            .orElseThrow(() ->
-                new NotFoundException("해당 음악이 존재하지 않습니다.")
-            );
+        List<ProfileMusic> profileMusics = profileMusicRepository
+            .findByUserIdAndMusicId(userId, musicId);
 
-        profileMusicRepository.delete(profileMusic);
+        if (profileMusics.isEmpty()) {
+            throw new NotFoundException("해당 음악이 존재하지 않습니다.");
+        }
+
+        profileMusicRepository.deleteAll(profileMusics);
     }
 }

@@ -71,6 +71,7 @@ public class GuestbookService {
                 .findByGuesthouseId(guesthouseId, pageable)
                 .map(entity -> {
                     GuestbookSummaryDto dto = new GuestbookSummaryDto();
+                    dto.setWriterId(entity.getUser().getId());
                     dto.setWriter(entity.getUser().getNickname());
                     dto.setBody(entity.getBody());
                     dto.setCreatedAt(entity.getCreatedAt());

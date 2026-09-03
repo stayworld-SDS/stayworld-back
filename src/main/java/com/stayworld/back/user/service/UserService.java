@@ -16,6 +16,7 @@ import com.stayworld.back.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private static final int PROFILE_PICTURE_COUNT = 10;
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -46,6 +49,7 @@ public class UserService {
         user.setBalance(50000);
         user.setVisitorCount(0);
         user.setCreatedAt(LocalDateTime.now());
+        user.setProfilePictureId(ThreadLocalRandom.current().nextInt(PROFILE_PICTURE_COUNT));
 
         return toDto(userRepository.save(user));
     }

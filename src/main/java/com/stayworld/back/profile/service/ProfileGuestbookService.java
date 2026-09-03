@@ -50,6 +50,7 @@ public class ProfileGuestbookService {
 
         return GuestbookPageResponse.from(entries.map(entry -> {
             GuestbookSummaryDto dto = new GuestbookSummaryDto();
+            dto.setWriterId(entry.getWriterId());
             dto.setWriter(nicknameById.get(entry.getWriterId()));
             dto.setBody(entry.getBody());
             dto.setCreatedAt(entry.getCreatedAt());
